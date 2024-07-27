@@ -1,0 +1,686 @@
+@name opsconfig/ssg_rsg_jobs_v0.41
+
+IndTurn = 50 #How many minutes it takes to change a car to unloaded once it reaches an industry (reccomended 20-30 mins)
+
+#[TODO:
+
+Automate determining if all colors, names, and boxes are correct
+Check random routing for extra train moves
+sanity check
+color closeness automation
+spawn cars at all industries check
+fix offcenter bounding boxes
+rip track functionality
+godfather aggregate has no name
+inbound train routing is wonky
+not enough work for derrickson
+
+]#
+
+
+#V0.4 - setting up new lading system - compatible with OPS 1.44
+#V0.41 - fixing lading system + reclassification - compatible with OPS 1.441
+#V0.42 - bugfixes, rejig staging, changed how train spawning behaves
+
+Tracks = table()
+WorldMarks = table()
+Segments = table()
+Trains = table()
+TrainPresets = table()
+
+TargetCarcount = 140
+
+function table zoneblock(N,A:array){
+    
+    local XP = YP = ZP = -inf()
+    local XN = YN = ZN = inf()
+    
+    for(X = 1,A:count()){
+        
+        Dat = Tracks[A[X,string],table]
+        
+        if(Dat:count()){
+        
+            XP = max(XP,max(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YP = max(YP,max(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZP = max(ZP,max(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+            XN = min(XN,min(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YN = min(YN,min(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZN = min(ZN,min(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+        }else{
+            
+            error("Zoneblock could not find the locale \""+A[X,string])
+            
+        }
+        
+    }
+    
+    for(X = 1,A:count()* N){
+        
+        Tracks[A[X,string],table]["boxhi",vector] = vec(XP,YP,ZP)
+        Tracks[A[X,string],table]["boxlo",vector] = vec(XN,YN,ZN)
+        
+    }
+    
+    return table(vec(XP,YP,ZP),vec(XN,YN,ZN))
+    
+}
+
+
+Tracks["wol1",table] = table(
+    "part of" = "wolfram",
+    "name" = "Wolfram Yard","length" = 20650,
+    "boxhi" = vec(-11355,9933,2190),"boxlo" = vec(-11557,-11005,1990),
+    "spawnpos" = vec(-11457,9833,2090),"spawnang" = -180)
+Tracks["wol2",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-11549,9048,2190),"boxlo" = vec(-11749,-10271,1990),"spawnpos" = vec(-11649,8948,2090),"spawnang" = 180,"length" = 19050)) 
+Tracks["wol3",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-11738,8236,2195),"boxlo" = vec(-11941,-9496,1990),"spawnpos" = vec(-11840,8136,2090),"spawnang" = -179,"length" = 17700)) 
+Tracks["wol4",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-11931,7532,2190),"boxlo" = vec(-12133,-8722,1990),"spawnpos" = vec(-12033,7432,2090),"spawnang" = -180,"length" = 16150)) 
+Tracks["wol5",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-12123,6683,2190),"boxlo" = vec(-12325,-7990,1990),"spawnpos" = vec(-12224,6705,2090),"spawnang" = 180,"length" = 14700)) 
+Tracks["wol6",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-12315,5982,2190),"boxlo" = vec(-12517,-7166,1990),"spawnpos" = vec(-12415,5875,2090),"spawnang" = 180,"length" = 13000)) 
+Tracks["wol7",table] = Tracks["wol1",table]:merge(table("boxhi" = vec(-12520,6001,2193),"boxlo" = vec(-12709,-6763,1990),"spawnpos" = vec(-12548,5901,2090),"spawnang" = 164,"length" = 13000)) 
+
+Tracks["wolfram",table] = table(
+    "name" = "Wolfram Yard","color" = vec(30,30,173),
+    "boxhi" = vec(-11004,13202,2190),"boxlo" = vec(-13048,-12566,1990),
+    "zonemax" = vec(17000,17000,2300),"zonemin" = vec(-17000,-17000,1900))
+
+#
+Tracks["wolservice2",table] = table(
+    "name" = "Wolfram Service Tracks","color" = vec(109,185,255),
+    "boxhi" = vec(-9885,5727,2190),"boxlo" = vec(-10202,2588,1990),
+    "spawnpos" = vec(-9985,2688,2090),"spawnang" = 0,"locgroup" = "wolfram",
+    "work" = array(0.1,"general_boxcar_nonhigh","parts","empty",0.25,"sand_hopper","sand","empty",0.5,"oil_tanker","fuel","empty"))
+Tracks["wolservice1",table] = Tracks["wolservice2",table]:merge(table("boxhi" = vec(-10139,5784,2190),"boxlo" = vec(-10340,2587,1990),"spawnpos" = vec(-10240,2687,2090),"spawnang" = 0))
+zoneblock(1,array("wolservice1","wolservice2"))   
+
+
+
+Tracks["rockout",table] = table(
+    "time" = 1,"excl" = "spawn",
+    "boxhi" = vec(5130,7909,-8498),"boxlo" = vec(-3000,7708,-8698),
+    "spawnpos" = vec(5030,7809,-8598),"spawnang" = 90)
+
+Tracks["rockgrain1",table] = table(
+    "work" = array(25/3,"grain","grain","empty"),"locgroup" = "rockind",
+    "name" = "Rockfort|Grain|Terminal", "color" = vec(135,63,255),
+    "boxhi" = vec(-11035,4747,-8498),"boxlo" = vec(-11304,-4165,-8698),
+    "spawnpos" = vec(-11204,4647,-8598),"spawnang" = -166,"time" = 5)
+Tracks["rockgrain2",table] = Tracks["rockgrain1",table]:merge(table("spawnpos" = vec(-11329,4628,-8598),"spawnang" = -180,"work" = array(25/3,"grain","grain","empty")))
+Tracks["rockgrain3",table]= Tracks["rockgrain1",table]:merge(table("spawnpos" = vec(-11519,5395,-8598),"spawnang" = 180,"work" = array(25/3,"grain","grain","empty")))
+    
+Tracks["rockservice1",table] = table(
+    "name" = "Rockfort Service Track", "color" = vec(204,99,138),"locgroup" = "rockind",
+    "boxhi" = vec(-12763,7129,-8498),"boxlo" = vec(-12965,4167,-8698),
+    "spawnpos" = vec(-12865,7029,-8598),"spawnang" = 179,
+    "work" = array(0.1,"general_boxcar_nonhigh","parts","empty",0.25,"sand_hopper","sand","empty",0.5,"oil_tanker","fuel","empty"))
+Tracks["rockservice2",table] = Tracks["rockservice1",table]:merge(table("boxhi" = vec(-12507,7119,-8497),"boxlo" = vec(-12863,3795,-8698),"spawnpos" = vec(-12607,7019,-8597),"spawnang" = -180))
+zoneblock(1,array("rockservice1","rockservice2"))
+
+Tracks["rockdelano1",table] = table(
+    "name" = "Delano|Engine", "color" = vec(114,255,255),"locgroup" = "rockind",
+    "boxhi" = vec(-3598,-14860,-8498),"boxlo" = vec(-7200,-15061,-8698),
+    "spawnpos" = vec(-3698,-14960,-8598),"spawnang" = 91,
+    "work" = array(5,"general_boxcar_nonhigh","delano","parts"))
+Tracks["rockdelano2",table] = table(
+    "name" = "Delano|Engine", "color" = vec(114,255,255),
+    "boxhi" = vec(-3644,-13516,-8498),"boxlo" = vec(-7200,-13717,-8698),
+    "spawnpos" = vec(-3744,-13616,-8598),"spawnang" = 92,
+    "work" = array(5,"general_boxcar_nonhigh","delano","parts"))
+zoneblock(1,array("rockdelano1","rockdelano2"))    
+
+Tracks["rockdelano3",table] = table("locgroup" = "rockind",
+    "name" = "Delano|Material|Control", "color" = vec(103,255,166),
+    "boxhi" = vec(-816,-6860,-8497),"boxlo" = vec(-5500,-7000,-8698),
+    "spawnpos" = vec(-916,-6960,-8598),"spawnang" = 91,
+    "work" = array(5,"general_boxcar_nonhigh","materials","delano"))
+    
+Tracks["rockstore",table] = table("locgroup" = "rockind",
+    "name" = "Rockfort|General|Stores", "color" = vec(255,176,125),
+    "boxhi" = vec(-1190,-9817,-8497),"boxlo" = vec(-1389,-14011,-8698),
+    "spawnpos" = vec(-1288,-13911,-8597),"spawnang" = -1,
+    "work" = array(5,"general_boxcar","supplies","empty"))
+    
+Tracks["rocksulfur",table] = table("locgroup" = "rockind",
+    "name" = "Western Materials|Sulfur Loading", "color" = vec(255,255,114),
+    "boxhi" = vec(-13083,194,-8498),"boxlo" = vec(-13318,-8923,-8698),
+    "spawnpos" = vec(-13218,-8823,-8598),"spawnang" = -10,
+    "work" = array(9,"sulfur","empty","sulfur"))
+
+TX3 = zoneblock(0,array("rockgrain1","rockservice1","rockdelano1","rockdelano3","rockstore","rocksulfur"))
+Tracks["rockind",table] = table(
+    "name" = "Rockfort City Industrial Zone","color" = vec(158,46,30),
+    "boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+Tracks["rock1",table] = table(
+    "part of" = "rockfort","length" = 14150,
+    "name" = "North Rockfort Outskirts Yard", "color" = vec(206,76,234),
+    "boxhi" = vec(10437,7878,-7914),"boxlo" = vec(10235,-6970,-8114),
+    "spawnpos" = vec(10335,7778,-8014),"spawnang" = 180)
+Tracks["rock2",table] = Tracks["rock1",table]:merge(table("boxhi" = vec(10629,7202,-7913),"boxlo" = vec(10629-192,-6991,-8114),"spawnpos" = vec(10529,7102,-8014),"spawnang" = 180,"length" = 12850))
+Tracks["rock3",table] = Tracks["rock1",table]:merge(table("boxhi" = vec(10821,6473,-7899),"boxlo" = vec(10821-192,-6997,-8114),"spawnpos" = vec(10721,6373,-8014),"spawnang" = 180,"length" = 11300))
+Tracks["rock4",table] = Tracks["rock1",table]:merge(table("boxhi" = vec(11013,5723,-7914),"boxlo" = vec(11013-192,-6946,-8114),"spawnpos" = vec(10913,5623,-8014),"spawnang" = 180,"length" = 9780))
+Tracks["rock5",table] = Tracks["rock1",table]:merge(table("boxhi" = vec(11205,4925,-7913),"boxlo" = vec(11205-192,-7116,-8114),"spawnpos" = vec(11103,4825,-8014),"spawnang" = 180,"length" = 8850))
+Tracks["rockfort",table] = table(
+    "name" = "North Rockfort Outskirts Yard", "color" = vec(206,76,234),
+    "boxhi" = vec(10780,9972,-7913),"boxlo" = vec(9799,-10642,-8114),
+    "zonemin" = vec(-2633,-11226,-8777),"zonemax" = vec(15254,15028,-7552))
+    
+Tracks["rfotrailer1",table] = table("locgroup" = "rockfort",
+    "name" = "RFO Trailer Dock","color" = vec(25, 122, 79),
+    "boxhi" = vec(12293,1572,-7914),"boxlo" = vec(12092,-4297,-8114),
+    "spawnpos" = vec(12193,-4197,-8014),"spawnang" = 0,
+    "work" = array(5,"tofc","empty","trailer"))
+Tracks["rfotrailer2",table] = Tracks["rfotrailer1",table]:merge(table(
+    "boxhi" = vec(12485,1656,-7913),"boxlo" = vec(12192,-4296,-8114),
+    "spawnpos" = vec(12384,-4196,-8014),"spawnang" = 2))
+    
+zoneblock(1,array("rfotrailer1","rfotrailer2"))
+
+Tracks["crucible",table] = table(
+    "name" = "Crucible Local Depot", "color" = vec(167,255,34),
+    "boxhi" = vec(11320,14331,-4969),"boxlo" = vec(6905,13915,-5170),
+    "spawnpos" = vec(11220,14016,-5069),"spawnang" = 92,
+    "work" = array(4,"general_boxcar","supplies","empty",1,"general_boxcar","supplies","exports"))
+    
+Tracks["godcoal",table] = table("locgroup" = "godfather",
+    "name" = "Powerplant Spot", "color" = vec(68,101,116),
+    "boxhi" = vec(-7287,-6044,-3684),"boxlo" = vec(-8640,-6247,-3898),
+    "spawnpos" = vec(-8540,-6144,-3798),"spawnang" = -90,
+    "work" = array(1,"coal_hopper","coal","empty"))
+Tracks["godcement",table] = table("locgroup" = "godfather",
+    "name" = "Cement Loading", "color" = vec(255,129,191),
+    "boxhi" = vec(-2272,-6044,-3698),"boxlo" = vec(-7287,-6245,-3898),
+    "spawnpos" = vec(-7590,-6145,-3798),"spawnang" = -90,
+    "work" = array(20,"cement_hopper","empty","cement"))
+Tracks["godteam",table] = table("locgroup" = "godfather",
+    "name" = "Godfather Warehouse Track", "color" = vec(255,207,30),
+    "boxhi" = vec(1852,-6043,-3698),"boxlo" = vec(-589,-6245,-3898),
+    "spawnpos" = vec(1752,-6145,-3798),"spawnang" = 91)
+    #"work" = array(0.5,"general_boxcar","empty","baggedcement",0.5,"general_boxcar","supplies","empty"))
+Tracks["godchem",table] = table("locgroup" = "godfather",
+    "name" = "Lime Slurry Unloading", "color" = vec(212,255,182),
+    "boxhi" = vec(-2397,-6559,-3698),"boxlo" = vec(-5387,-9548,-3898),
+    "spawnpos" = vec(-5287,-9448,-3798),"spawnang" = -45,
+    "work" = array(3,"chem","lime slurry","empty"))
+Tracks["godaggregate2",table] = table("locgroup" = "godfather",
+    "name" = "Godfather Storage Siding", "color" = vec(254,176,255),
+    "boxhi" = vec(827,-5275,-3697),"boxlo" = vec(-8635,-5477,-3898),
+    "spawnpos" = vec(-8535,-5377,-3798),"spawnang" = -90)
+Tracks["godaggregate1",table] = table("locgroup" = "godfather",
+    "name" = "Aggregate Unloading Track", "color" = vec(254,176,255),
+    "boxhi" = vec(110,-5083,-3698),"boxlo" = vec(-8639,-5381,-3898),
+    "spawnpos" = vec(-8539,-5183,-3798),"spawnang" = -90)
+    #"work" = array(2,"gravel","gravel","empty"))
+zoneblock(1,array("godaggregate1","godaggregate2"))
+TX3 = zoneblock(0,array("godcoal","godchem","godaggregate1","godteam"))
+Tracks["godfather",table] = table(
+    "name" = "Godfather","color" = vec(101,232,30),
+    "zonemin" = vec(-17000,-17000,-4400),"zonemax" = vec(17000,17000,-3600),
+    "boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+    
+
+Tracks["dergrain",table] = table("locgroup" = "dereast",
+    "name" = "Derrickson Co-Op", "color" = vec(255,219,188),
+    "boxhi" = vec(12675,-14523,-3690),"boxlo" = vec(8201,-14840,-3890),
+    "spawnpos" = vec(12575,-14624,-3790),"spawnang" = 92,
+    "work" = array(5,"grain","empty","grain"))
+Tracks["derauto",table] = table("locgroup" = "dereast",
+    "name" = "Derrickson Toothpick Plant", "color" = vec(179,140,255),
+    "boxhi" = vec(7948,-10139,-3690),"boxlo" = vec(-4853,-10341,-3890),
+    "spawnpos" = vec(-4753,-10241,-3790),"spawnang" = -90,
+    "work" = array(5,"general_boxcar","wood","toothpicks"))
+Tracks["dereast",table] = table(
+    "zonemin" = vec(-17000,-17000,-4400),"zonemax" = vec(17000,17000,-3600),
+    "name" = "Derrickson East","color" = vec(30,237,135),
+    "boxhi" = vec(14049,-13768,-3690),"boxlo" = vec(-11958,-14949,-3898))
+    
+Tracks["derstorage",table] = table(
+    "name" = "Coal Storage Track", "color" = vec(143,123,103),
+    "boxhi" = vec(2246,-867,-3689),"boxlo" = vec(-8217,-1221,-3890),
+    "spawnpos" = vec(2146,-967,-3790),"spawnang" = 113)
+Tracks["dertipple",table] = table(
+    "time" = 0.1,"locgroup" = "derrickson",
+    "name" = "Sunset Coal|Mine Tipple", "color" = vec(142,102,185),
+    "boxhi" = vec(2132,-630,-3647),"boxlo" = vec(-8242,-850,-3890),
+    "spawnpos" = vec(2032,-737,-3790),"spawnang" = 90,
+    "work" = array(20,"coal_hopper","empty","coal"))
+
+    
+Tracks["der1",table] = table(
+    "part of" = "derrickson","length" = 8750,
+    "name" = "Derrickson Yard", "color" = vec(30,184,74),
+    "boxhi" = vec(4279,890,-3690),"boxlo" = vec(-4608,699,-3890),
+    "spawnpos" = vec(4179,875,-3790),"spawnang" = 104)
+Tracks["der2",table] = Tracks["der1",table]:merge(table("boxhi" = vec(4343,1091,-3690),"boxlo" = vec(-3960,891,-3890),"spawnpos" = vec(4243,991,-3790),"spawnang" = 90,"length" = 8100))
+Tracks["der3",table] = Tracks["der1",table]:merge(table("boxhi" = vec(5047,1285,-3690),"boxlo" = vec(-3187,1083,-3890),"spawnpos" = vec(4947,1184,-3790),"spawnang" = 90,"length" = 8100)) 
+Tracks["der4",table] = Tracks["der1",table]:merge(table("boxhi" = vec(5751,1477,-3690),"boxlo" = vec(-3067,1280,-3890),"spawnpos" = vec(5651,1376,-3790),"spawnang" = 91,"length" = 8750))
+Tracks["der5",table] = Tracks["der1",table]:merge(table("boxhi" = vec(7822,1733,-3690),"boxlo" = vec(-3548,1531,-3890),"spawnpos" = vec(7722,1633,-3790),"spawnang" = 90,"length" = 11100))
+Tracks["der6",table] = Tracks["der1",table]:merge(table("boxhi" = vec(8618,1925,-3690),"boxlo" = vec(-3426,1740,-3890),"spawnpos" = vec(8518,1825,-3790),"spawnang" = 90,"length" = 11900))
+Tracks["derrickson",table] = table(
+    "zonemin" = vec(-17000,-17000,-4400),"zonemax" = vec(17000,17000,-3600),
+    "name" = "Derrickson Yard","color" = vec(30,184,74),
+    "boxhi" = vec(10097,1914,-3690),"boxlo" = vec(-8176,-330,-3890))
+
+Tracks["kahuoil1",table] = table("locgroup" = "kahuind",
+    "name" = "Kahuna|Oil|Company","color" = vec(162,255,118),
+    "boxhi" = vec(3810,10597,-2033),"boxlo" = vec(-402,10140,-2234),
+    "spawnpos" = vec(3689,10244,-2122),"spawnang" = 89,
+    "work" = array(1,"general_boxcar","supplies","empty",4,"oil_tanker","empty","oil",1,"chem","empty","byproducts"))
+Tracks["kahuoil2",table] = Tracks["kahuoil1",table]:merge(table("spawnpos" = vec(1449,10437,-2122),"spawnang" = 90))
+
+Tracks["kahuscrap",table] = table("locgroup" = "kahuind",
+    "name" = "Kahuna|Scrapyard","color" = vec(255,104,98),
+    "boxhi" = vec(-13467,10073,-2021),"boxlo" = vec(-13669,5840,-2222),
+    "spawnpos" = vec(-13567,9973,-2121),"spawnang" = -179,
+    "work" = array(2,"scrap_gondola","empty","scrap"))
+
+Tracks["kahucold",table] = table("locgroup" = "kahuind",
+    "name" = "Kahuna|Cold|Storage","color" = vec(30,212,255),
+    "boxhi" = vec(2850,2405,-2022),"boxlo" = vec(-1500,2205,-2222),
+    "spawnpos" = vec(2526,2305,-2122),"spawnang" = 90,
+    "work" = array(5,"reefer insulated","produce","empty"))
+
+Tracks["kahuatl1",table] = table("locgroup" = "kahuind",
+    "name" = "Atlantic|Shipping","color" = vec(30,174,30),
+    "boxhi" = vec(3710,-2559,-2022),"boxlo" = vec(-1838,-3173,-2222),
+    "spawnpos" = vec(3610,-3072,-2122),"spawnang" = 91,
+    "work" = array(9,"general_boxcar","empty","supplies"))
+Tracks["kahuatl2",table] = Tracks["kahuatl1",table]:merge(table("boxhi" = vec(3716,-2459,-2022),"boxlo" = vec(-1903,-2661,-2222),"spawnpos" = vec(3616,-2561,-2122),"spawnang" = 90))
+zoneblock(1,array("kahuatl1","kahuatl2"))
+
+
+Tracks["kahusiding1",table] = table(
+    "part of" = "kahuna",#"excl" = "spawn",
+    "spawnpos" = vec(6144,8769,-2122),"spawnang" = 1)
+Tracks["kahusiding2",table] = table(
+    "part of" = "kahuna",#"excl" = "spawn",
+    "spawnpos" = vec(6336,8775,-2122),"spawnang" = 1)
+    
+TX3 = zoneblock(0,array("kahuoil1","kahuscrap","kahucold","kahuatl1"))
+Tracks["kahuna",table] = table("name" = "Kahuna", "color" = vec(30,182,224), "boxhi" = TX3[1,vector]+vec(0,2500,0), "boxlo" = TX3[2,vector],"zonemax" = vec(17000,17000,-2000), "zonemin" = vec(-17000,-17000,-2300))
+    
+    
+Tracks["redind",table] = table("locgroup" = "redwall",
+    "time" = IndTurn*1.5,"excl" = "redlocal",
+    "name" = "Redwall|Remanufacturing","color" = vec(200,30,30),
+    "boxhi" = vec(-2108,10854,150),"boxlo" = vec(-2310,3884,-50),
+    "spawnpos" = vec(-2210,10754,50),"spawnang" = -180,
+    "work" = array(6,"general_boxcar","materials","supplies"))
+    
+Tracks["redtun1",table] = table("locgroup" = "redwall",
+    "time" = IndTurn*1.5,"excl" = "redlocal",
+    "name" = "Sandstone Branch|Lumber Company","color" = vec(106,182,30),
+    "boxhi" = vec(14436,-322,153),"boxlo" = vec(14234,-6541,-58),
+    "spawnpos" = vec(14336,-422,42),"spawnang" = -180,
+    "work" = array(4,"general_boxcar","empty","wood",4,"wood","empty","wood",2,"log_flatcar","logs","empty"))
+Tracks["redtun2",table] = Tracks["redtun1",table]:merge(table("boxhi" = vec(14368,2041,154),"boxlo" = vec(13722,-6763,-58),"spawnpos" = vec(13822,1941,42),"spawnang" = 180))
+zoneblock(1,array("redtun1","redtun2"))
+    
+Tracks["redware",table] = table("locgroup" = "redwall",
+    "time" = IndTurn*1.5,"excl" = "redlocal",
+    "name" = "Redwall Street|Warehouses","color" = vec(146,183,181),
+    "boxhi" = vec(5220,4943,146),"boxlo" = vec(5018,-7389,-54),
+    "spawnpos" = vec(5120,4843,46),"spawnang" = 180)
+    #"work" = array(2,"general_boxcar","empty","supplies"))
+    
+Tracks["redoil1",table] = table("locgroup" = "redwall",
+    "time" = IndTurn*1.5,"excl" = "redlocal",
+    "name" = "Northern Petrol|Loading","color" = vec(230,30,102),
+    "boxhi" = vec(7012,2984,154),"boxlo" = vec(6058,-2500,-54),
+    "spawnpos" = vec(6912,2884,46),"spawnang" = -180,
+    "work" = array(1,"oil_tanker","oil","fuel",4,"oil_tanker","oil","empty"))
+Tracks["redoil2",table] = Tracks["redoil1",table]:merge(table("boxhi" = vec(6927,2982,146),"boxlo" = vec(6618,-2729,-54),"spawnpos" = vec(6720,2882,46),"spawnang" = -180))
+zoneblock(1,array("redoil1","redoil2"))
+    
+TX3 = zoneblock(0,array("redind","redtun1","redware","redoil1"))
+Tracks["redwall",table] = table("name" = "Redwall", "color" = vec(182,126,30), "boxhi" = TX3[1,vector]+vec(1000,2000,2000), "boxlo" = TX3[2,vector])
+    
+Tracks["drock",table] = table("locgroup" = "redwall",
+    "name" = "Dragon's Rock Timber","color" = vec(30,109,30),
+    "boxhi" = vec(13917,8319,2198),"boxlo" = vec(13098,2213,1986),
+    "spawnpos" = vec(13199,8219,2087),"spawnang" = 179,
+    "work" = array(5,"log_flatcar","empty","logs"))
+    
+Tracks["wolin",table] = table(
+    "time" = 1,"excl" = "spawn",
+    "boxhi" = vec(-15003,13986,2198),"boxlo" = vec(-15205,5226,1998),
+    "spawnpos" = vec(-15103,13886,2098),"spawnang" = -180)
+Tracks["wolin2",table] = Tracks["wolin",table]:merge(table(
+    "boxhi" = vec(-14811,13991,2202),"boxlo" = vec(-15012,5210,1998),
+    "spawnpos" = vec(-14912,13891,2098),"spawnang" = -179))
+zoneblock(1,array("wolin","wolin2"))
+   
+
+Tracks["wolrip1",table] = table("time" = 120,"locgroup" = "wolfram",
+    "name" = "Wolfram RIP Track","color" = vec(255,0,0),"noreload" = 1,
+    "boxhi" = vec(-10589,13926,2190),"boxlo" = vec(-10789,9050,1990),
+    "spawnpos" = vec(-10689,13826,2090),"spawnang" = -180)
+Tracks["wolrip2",table] = Tracks["wolrip1",table]:merge(table("shareall" = 0.01,
+    "boxhi" = vec(-10395,13923,2190),"boxlo" = vec(-10677,9009,1990),
+    "spawnpos" = vec(-10496,13823,2090),"spawnang" = -178))
+zoneblock(1,array("wolrip1","wolrip2"))
+
+
+
+
+#Markers - A position and yaw angle to place an industry marker - pulls information from the track list
+WorldMarks:pushArray(array("godcement",vec(-3566,-6476,-3680),90))
+WorldMarks:pushArray(array("godchem",vec(-2919,-6856,-3680),315))
+WorldMarks:pushArray(array("godteam",vec(386,-6910,-3350),90))
+WorldMarks:pushArray(array("dertipple",vec(18,-354,-3518),90))
+WorldMarks:pushArray(array("dergrain",vec(11120,-14018,-3642),180))
+WorldMarks:pushArray(array("derauto",vec(8189,-10498,-3631),270))
+
+WorldMarks:pushArray(array("kahuatl1",vec(469,-2814,-1980),90))
+WorldMarks:pushArray(array("kahucold",vec(1160,2686,-1541),270))
+WorldMarks:pushArray(array("kahuoil1",vec(270,10942,-1920),270))
+WorldMarks:pushArray(array("kahuscrap",vec(-12994,6393,-1964),180))
+
+WorldMarks:pushArray(array("redind",vec(-2430,7572,243),0))
+WorldMarks:pushArray(array("redoil1",vec(6412,-228,205),360))
+WorldMarks:pushArray(array("redtun1",vec(13573,-5833,139),360))
+WorldMarks:pushArray(array("redware",vec(4610,2374,241),0))
+
+WorldMarks:pushArray(array("rockservice1",vec(-12526,4064,-8438),0))
+WorldMarks:pushArray(array("rocksulfur",vec(-13000,-6999,-8477),180))
+WorldMarks:pushArray(array("rocksulfur",vec(-13000,-6999,-8477),0))
+WorldMarks:pushArray(array("rockgrain1",vec(-11011,1847,-8376),180))
+WorldMarks:pushArray(array("rockdelano1",vec(-7040,-14499,-8443),180))
+WorldMarks:pushArray(array("rockdelano3",vec(-4052,-6840,-8400),270))
+WorldMarks:pushArray(array("rockstore",vec(-1575,-12520,-8365),0))
+WorldMarks:pushArray(array("flagstaff",vec(4300,7950,-8350),260))
+WorldMarks:pushArray(array("scythe",vec(4300,7950,-8425),260))
+WorldMarks:pushArray(array("phoenix",vec(4300,7950,-8500),260))
+WorldMarks:pushArray(array("goldstone",vec(4300,7950,-8575),260))
+WorldMarks:pushArray(array("shreveport",vec(-15200,13435,2125),-10))
+WorldMarks:pushArray(array("okcity",vec(-15200,13435,2200),-10))
+WorldMarks:pushArray(array("daviscity",vec(-15200,13435,2275),-10))
+WorldMarks:pushArray(array("henrysburg",vec(-15200,13435,2350),-10))
+
+WorldMarks:pushArray(array("godcoal",vec(-8159,-6526,-3606),90))
+WorldMarks:pushArray(array("godaggregate1",vec(-3447,-4802,-3675),270))
+WorldMarks:pushArray(array("wolservice1",vec(-9763,3889,2265),180))
+WorldMarks:pushArray(array("rfotrailer1",vec(12510,-152,-7926),180))
+WorldMarks:pushArray(array("wolrip1",vec(-10354,10875,2231),180))
+WorldMarks:pushArray(array("crucible",vec(9778,13802,-4959),90))
+
+Tracks["flagstaff",table] = Tracks["rockout",table]:merge(table("name" = "Flagstaff, AZ","color" = vec(192,220,174),"inbound" = 1,"work" = array(60,"manifest","misc","misc"),"not a destination" = 1,"excl" = ""))
+Tracks["goldstone",table] = Tracks["rockout",table]:merge(table("name" = "Goldstone Yard","color" = vec(176,172,30),"inbound" = 1))
+Tracks["scythe",table] = Tracks["rockout",table]:merge(table("name" = "Scythe Yard","color" = vec(226,255,86),"delete" = 1,"outbound" = 1))
+Tracks["grandevalley",table] = Tracks["rockout",table]:merge(table("name" = "Grande Valley, AZ","color" = vec(30,140,60),"delete" = 1,"outbound" = 1))
+Tracks["phoenix",table] = Tracks["rockout",table]:merge(table("name" = "Phoenix, AZ","color" = vec(255,91,30),"delete" = 1,"work" = array(20,"coal_hopper","coal","empty")))
+
+#Tracks["dallas",table] = Tracks["wolin",table]:merge(table("name" = "Dallas Yard",oldcolor = vec(255,191,0),"delete" = 1,"outbound" = 0.1))
+Tracks["shreveport",table] = Tracks["wolin",table]:merge(table("name" = "Shreveport, LA","color" = vec(180,214,30),"delete" = 1,"outbound" = 0.75))
+Tracks["daviscity",table] = Tracks["wolin",table]:merge(table("name" = "Davis City Yard","color" = vec(174,255,204),"inbound" = 1))
+Tracks["henrysburg",table] = Tracks["wolin",table]:merge(table("name" = "Henrysburg Yard","color" = vec(77,42,30)*1.3,"inbound" = 1,"work" = array(60,"manifest","misc","misc"),"not a destination" = 1,"excl" = ""))
+Tracks["henrysburgout",table] = Tracks["wolin",table]:merge(table("name" = "Henrysburg Yard","color" = vec(77,42,30)*1.3,"delete" = 1,"outbound" = 1))
+Tracks["okcity",table] = Tracks["wolin",table]:merge(table("name" = "Oklahoma City, OK","color" = vec(87,255,88),"delete" = 1,"outbound" = 1.25))
+    
+Segments["ftw",table] = table(
+    "job" = "FTW","color" = Tracks["flagstaff",table]["color",vector],
+    "name" = "Flagstaff to Wolfram",
+    "desc" = "Northbound Manifest",
+    "routing" = table(array("flagstaff"), array("wolfram")))
+    
+Segments["htw1",table] = table(
+    "job" = "HTW","color" = Tracks["henrysburg",table]["color",vector],
+    "name" = "Inbound Henrysburg to Wolfram",
+    "desc" = "Swap & Return Transfer",
+    "routing" = table(array("henrysburg"), array("wolfram")))
+Segments["htw2",table] = table(
+    "job" = "HTW","color" = Tracks["henrysburg",table]["color",vector],
+    "name" = "Wolfram to Henrysburg",
+    "desc" = "Northbound Swap & Return Transfer",
+    "min" = 6,
+    "routing" = table(array("wolfram"), array("henrysburgout")))
+    
+Segments["dbs",table] = table(
+    "job" = "DBS","color" = Tracks["shreveport",table]["color",vector],
+    "name" = "Northbound Transfer",
+    "min" = 6, "max" = 12,
+    "routing" = table(array("derrickson", "dertipple"), array("shreveport")))
+    
+Segments["dcp",table] = table(
+    "job" = "DCP","color" = Tracks["phoenix",table]["color",vector],
+    "name" = "Derrickson to Phoenix",
+    "desc" = "Southbound Unit Coal Train",
+    "min" = 6,
+    "routing" = table(array("derrickson", "dertipple"), array("phoenix")))
+    
+Segments["wgv",table] = table(
+    "job" = "WGV",
+    "name" = "Wolfram to Grande Valley",
+    "desc" = "Southbound Transfer",
+    "color" = Tracks["grandevalley",table]["color",vector],
+    "routing" = table(array("wolfram"),array("grandevalley")),
+    "min" = 6, "max" = 16)
+
+Segments["dcr",table] = table(
+    "job" = "DCR","color" = Tracks["daviscity",table]["color",vector],
+    "name" = "Davis City to Rockfort Manifest",
+    "desc" = "Inbound Transfer",
+    #"min" = 8, "max" = 12,
+    "routing" = table(array("daviscity"), array("rockfort")))
+Segments["rto",table] = table(
+    "job" = "RTO","color" = Tracks["okcity",table]["color",vector],
+    "name" = "Rockfort to Oklahoma City",
+    "desc" = "Northbound Transfer",
+    "min" = 6, "max" = 16,
+    "routing" = table(array("rockfort"), array("okcity")))
+Segments["gtr",table] = table(
+    "job" = "GTR","color" = Tracks["goldstone",table]["color",vector],
+    "name" = "Goldstone Yard to Rockfort",
+    "desc" = "Inbound Transfer",
+    #"min" = 8, "max" = 12,
+    "routing" = table(array("goldstone"), array("rockfort")))
+
+Segments["rwd1",table] = table(
+    "job" = "RWD",
+    "name" = "\"Redwall Dodger\"",
+    "desc" = "ENSURE TRAIN IS BLOCKED BY FINAL DESTINATION!",
+    "color" = vec(211,103,30),
+    "min" = 6, "max" = 10,"showfinal" = 1,
+    "routing" = table(array("wolfram"), array("drock"), array("redwall")))
+Segments["rwd2",table] = table(
+    "job" = "RWD",
+    "name" = "\"Redwall Dodger\"",
+    "color" = vec(255,163,30),
+    "routing" = table(array("redwall"), array("redind","redtun1","redtun2","redware","redoil1","redoil2"), array("drock"), array("wolfram")))
+
+Segments["kls",table] = table(
+    "job" = "KLS",
+    "name" = "Kahuna Local Switcher",
+    "color" = vec(30,158,174),
+    "routing" = table(array("kahuna"),array("kahuoil1","kahuoil2","kahuscrap","kahucold","kahuatl1","kahuatl2")))
+    
+Segments["rfl1",table] = table(
+    "job" = "RFL",
+    "name" = "Rockfort City Local",
+    "color" = vec(119,30,30),
+    "min" = 6, "max" = 14,"showfinal" = 1,
+    "routing" = table(array("rockfort"), array("rockind")))
+Segments["rfl2",table] = Segments["rfl1",table]:merge(table("min" = 0,"max" = 0,"showfinal" = 0,
+    "routing" = table(array("rockind"), array("rockgrain1","rockgrain2","rockgrain3","rockservice1","rockservice2","rockdelano1","rockdelano2","rockdelano3","rockstore","rocksulfur"),array("rockfort"))))
+
+Segments["dtk",table] = table(
+    "job" = "DTK",
+    "name" = "Derrickson to Kahuna Transfer",
+    "color" = vec(255,53,173),"showfinal" = 1,
+    "routing" = table(array("derrickson", "dertipple"),array("kahuna")),
+    "min" = 6,"max" = 12)
+Segments["ktw",table] = table(
+    "job" = "KTW",
+    "name" = "Kahuna to Wolfram Transfer",
+    "color" = vec(104,53,119),
+    "routing" = table(array("kahuoil1","kahuoil2","kahuscrap","kahucold","kahuatl1","kahuatl2"),array("wolfram")),
+    "desc" = "Put cars in Kahuna Siding\nto await KTW Pickup")
+    
+Segments["rtw",table] = table(
+    "job" = "RTW",
+    "name" = "Rockfort to Wolfram Transfer",
+    "min" = 6,"max" = 12,"color" = vec(105,30,195),
+    "routing" = table(array("rockfort"),array("wolfram")))
+
+
+Segments["wrs1",table] = table(
+    "job" = "WRS","train" = "wrs",
+    "name" = "Southbound Wolfram to Rockfort & Scythe",
+    "color" = Tracks["scythe",table]["color",vector],
+    "routing" = table(array("wolfram","rockfort"),array("scythe")),
+    "desc" = "Group with Scythe cars on the front!")
+Segments["wrs2",table] = table(
+    "job" = "WRS","train" = "wrs",
+    "name" = "Southbound Wolfram to Rockfort & Scythe",
+    "desc" = "Group with Rockfort cars on the rear!",
+    "color" = Tracks["scythe",table]["color",vector]*0.6+vec(150,60,0),
+    "routing" = table(array("wolfram"),array("rockfort")))
+Trains["wrs",table] = table("min" = 6,"max" = 12)
+
+Segments["wtd",table] = table(
+    "job" = "WTD",
+    "name" = "Wolfram Transfer to Derrickson",
+    "color" = vec(30,111,106),
+    "routing" = table(array("wolfram"),array("derrickson")),
+    "min" = 6, "max" = 12)
+
+Segments["dle1",table] = table(
+    "job" = "DLE","showfinal" = 1,
+    "name" = "Derrickson Local East",
+    "color" = vec(68,244,188),
+    "routing" = table(array("derrickson", "dertipple"), array("dereast")),
+    "min" = 4,"max" = 10)
+Segments["dle2",table] = Segments["dle1",table]:merge(table(
+    "min" = 0, "max" = 0,"showfinal" = 0,
+    "routing" = table(array("dereast"), array("dergrain","derauto"), array("derrickson")))) 
+    
+Segments["dgc1",table] = table(
+    "job" = "GCL","showfinal" = 1,
+    "name" = "Godfather Cement Local","color" = vec(148,206,103),
+    "min" = 6,"max" = 14,
+    "routing" = table(array("derrickson", "dertipple"), array("godfather")))
+Segments["dgc2",table] = Segments["dgc1",table]:merge(table(
+    "min" = 0,"max" = 0,"showfinal" = 0,
+    "routing" = table(array("godfather"), array("godcement","godcoal","godchem","godaggregate1","godaggregate2","godteam"), array("derrickson"))))
+ 
+Segments["dtr",table] = table(
+    "job" = "DTR",
+    "name" = "Derrickson to Rockfort Transfer",
+    "color" = vec(146,30,105),
+    "min" = 6, "max" = 12,
+    "routing" = table(array("derrickson", "dertipple"), array("rockfort")))
+    
+Segments["rrd1",table] = table(
+    "job" = "RRD",
+    "name" = "Rockfort to Derrickson Roadswitcher",
+    "color" = vec(30,109,255),"train" = "rrd",
+    "routing" = table(array("rockfort"),array("derrickson")))
+Segments["rrd2",table] = table(
+    "job" = "RRD",
+    "name" = "Crucible Block - add to end of RRD",
+    "color" = vec(102,138,255),"train" = "rrd",
+    "routing" = table(array("rockfort"), array("crucible")))
+Segments["rrd3",table] = table(
+    "job" = "RRD",
+    "name" = "Crucible Block - RRD pickup",
+    "color" = vec(30,109,255),
+    "routing" = table(array("crucible"), array("derrickson")))
+Trains["rrd",table] = table("min" = 6,"max" = 12)
+
+Segments["ros1",table] = table(
+    "job" = "ROS",
+    "name" = "Rockfort Outskirts Switcher",
+    "color" = vec(25, 122, 79),
+    "routing" = table(array("rockfort"),array("rfotrailer1","rfotrailer2")))
+Segments["ros2",table] = table(
+    "job" = "ROS",
+    "name" = "Rockfort Outskirts Switcher",
+    "color" = vec(186, 214, 153),
+    "routing" = table(array("rfotrailer1","rfotrailer2"),array("rockfort")))
+
+
+Segments["dsw1",table] = table("job" = "DSW","name" = "Derrickson Switcher","color" = vec(142,102,185),"routing" = table(array("derrickson"),array("dertipple")),"min" = 0)
+#Segments["dsw2",table] = table("job" = "DSW","name" = "Derrickson Switcher","color" = vec(83,177,106),"routing" = table(array("dertipple","derstorage"),array("derrickson")))
+
+Segments["wsw1",table] = table("job" = "WSW","name" = "Wolfram Switcher","color" = vec(184,220,255),"routing" = table(array("wolfram"),array("wolservice1","wolservice2")))
+Segments["wsw2",table] = table("job" = "WSW","name" = "Wolfram Switcher","color" = vec(96,165,180),"routing" = table(array("wolservice1","wolservice2"),array("wolfram")))
+Segments["wsw3",table] = table("job" = "WSW","name" = "Wolfram Switcher","color" = vec(255,0,0),"routing" = table(array("wolfram"),array("wolrip1","wolrip2")))
+Segments["wsw4",table] = table("job" = "WSW","name" = "Wolfram Switcher","color" = vec(125,30,30),"routing" = table(array("wolrip1","wolrip2"),array("wolfram")))
+
+Segments["0",table] = table("job" = "Extra Train","color" = vec(255,0,255))
+Segments["loc",table] = table("job" = "Local Work","color" = vec(200))
+
+
+TrainPresets["redwall",table] = table("name" = "Redwall Dodger","desc" = "Spawns cars to work in Wolfram for Redwall and vice versa.","color" = vec(255,93,0),
+"data" = table(table("share" = 0.5,"spawns" = array("open","wolfram"),"depth" = 5,"jobs" = array("rwd1")),table("share" = 0.5,"spawns" = array("redwall"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["godfather",table] = table("name" = "Godfather Local","desc" = "Spawns cars to work in Derrickson for Godfather and vice versa.","color" = Segments["dgc1",table]["color",vector],
+"data" = table(table("share" = 0.5,"spawns" = array("open","der1","der2","der3","der4"),"depth" = 5,"jobs" = array("dgc1")),table("share" = 0.5,"spawns" = array("godfather"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["dereast",table] = table("name" = "Derrickson Local East","desc" = "Spawns cars to work in Derrickson for Der. East and vice versa.","color" = Segments["dle1",table]["color",vector],
+"data" = table(table("share" = 0.5,"spawns" = array("open","der1","der2","der3","der4"),"depth" = 5,"jobs" = array("dle1")),table("share" = 0.5,"spawns" = array("dereast"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["rocklocal",table] = table("name" = "Rockfort Local","desc" = "Spawns cars to work in RFO for Rockfort City and vice versa.","color" = Segments["rfl1",table]["color",vector],
+"data" = table(table("share" = 0.5,"spawns" = array("open","rockfort"),"depth" = 5,"jobs" = array("rfl1")),table("share" = 0.5,"spawns" = array("rockind"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["kahuna",table] = table("name" = "Kahuna Switcher","desc" = "Spawns cars to work in Kahuna Siding and the industries.","color" = Segments["kls",table]["color",vector],
+"data" = table(table("share" = 0.5,"spawns" = array("open","kahusiding1"),"depth" = 1,"jobs" = array("all")),table("share" = 0.5,"spawns" = array("kahuind"),"depth" = 0,"jobs" = array("all"))))
+
+
+
+TrainPresets["wolyard",table] = table("name" = "WolframYard Work","desc" = "Spawns cars to sort in Wolfram.","color" = vec(50,50,220),
+"data" = table(table("share" = 1,"spawns" = array("open","wolfram"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["deryard",table] = table("name" = "Derrickson Yard Work","desc" = "Spawns cars to sort in Derrickson.","color" = vec(50,220,50),
+"data" = table(table("share" = 1,"spawns" = array("open","derrickson"),"depth" = 0,"jobs" = array("all"))))
+
+TrainPresets["rockyard",table] = table("name" = "RFO Yard Work","desc" = "Spawns cars to sort in RFO.","color" = vec(220,50,50),
+"data" = table(table("share" = 1,"spawns" = array("open","rockfort"),"depth" = 0,"jobs" = array("all"))))
+
+
+
+TrainPresets["dtk",table] = table("name" = "Kahuna Transfer","desc" = "Brings cars from Derrickson to Kahuna.","color" = Segments["dtk",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","derrickson"),"depth" = 1,"jobs" = array("dtk"))))
+
+TrainPresets["wrs",table] = table("name" = "Wolfram-Rockfort-Scythe","desc" = "Road train from Wolfram to Rockfort and beyond.","color" = Segments["wrs1",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","wolfram"),"depth" = 3,"jobs" = array("wrs1","wrs2"))))
+
+TrainPresets["wtd",table] = table("name" = "Wolfram to Derrickson Transfer","desc" = "Road train from Wolfram to Derrickson.","color" = Segments["wtd",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","wolfram"),"depth" = 3,"jobs" = array("wtd"))))
+
+TrainPresets["grandevalley",table] = table("name" = "Grande Valley","desc" = "Off-map train to SB interchange from Wolfram.","color" = Segments["wgv",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","wolfram"),"depth" = 1,"jobs" = array("wgv"))))
+
+TrainPresets["okcity",table] = table("name" = "Oklahoma City","desc" = "Off-map train to NB interchange from Rockfort.","color" = Segments["rto",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","rockfort"),"depth" = 1,"jobs" = array("rto"))))
+
+TrainPresets["shreveport",table] = table("name" = "Shreveport","desc" = "Off-map train to NB interchange from Derrickson.","color" = Segments["dbs",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","derrickson"),"depth" = 1,"jobs" = array("dbs"))))
+
+TrainPresets["rtw",table] = table("name" = "Rockfort to Wolfram","desc" = "Road train from Rockfort to Wolfram.","color" = Segments["rtw",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","rockfort"),"depth" = 1,"jobs" = array("rtw"))))
+
+TrainPresets["dcp",table] = table("name" = "Derrickson to Phoenix","desc" = "Off-map coal train to SB interchange from Derrickson.","color" = Segments["dcp",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","der5","der6"),"depth" = 1,"jobs" = array("dcp"))))
+
+TrainPresets["dtr",table] = table("name" = "Derrickson Transfer to Rockfort","desc" = "Road train from Derrickson to Rockfort.","color" = Segments["dtr",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","der5","der6"),"depth" = 1,"jobs" = array("dtr"))))
+
+TrainPresets["rrd",table] = table("name" = "Rockfort Roadswitcher to Derrickson","desc" = "Road train from Rockfort to Derrickson, working Crucible on the way.","color" = Segments["rrd1",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("rock6","crucible"),"depth" = 3,"jobs" = array("rrd1","rrd2","rrd3"))))
+
+
+TrainPresets["henrysburg",table] = table("name" = "Henrysburg Turn","desc" = "Brings cars from North portal to Wolfram. Run when a return HTW is available.","color" = Segments["htw1",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("henrysburg"),"depth" = 1,"jobs" = array("all"))))
+
+TrainPresets["goldstone",table] = table("name" = "Goldstone Transfer","desc" = "Brings cars from South portal to RFO.","color" = Segments["gtr",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("goldstone"),"depth" = 1,"jobs" = array("all"))))
+
+TrainPresets["daviscity",table] = table("name" = "Davis City Manifest","desc" = "Brings cars from North portal to RFO.","color" = Segments["dcr",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("daviscity"),"depth" = 1,"jobs" = array("all"))))
+
+TrainPresets["flagstaff",table] = table("name" = "Flagstaff Manifest","desc" = "Brings cars from South portal to Wolfram.","color" = Segments["ftw",table]["color",vector],
+"data" = table(table("share" = 1,"spawns" = array("flagstaff"),"depth" = 1,"jobs" = array("all"))))
+

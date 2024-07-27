@@ -1,0 +1,916 @@
+@name opsconfig/lober_jobs
+
+IndTurn = 50 #How many minutes it takes to change a car to unloaded once it reaches an industry (reccomended 20-30 mins)
+
+Tracks = table()
+WorldMarks = table()
+Segments = table()
+Trains = table()
+
+TargetCarcount = 80
+
+#V0.40 - setting up new lading system - compatible with OPS 1.44
+#V0.41 - work on staging trains, 501 colors, and compatibility with 1.442
+
+
+function table zoneblock(N,A:array){
+    
+    local XP = YP = ZP = -inf()
+    local XN = YN = ZN = inf()
+    
+    for(X = 1,A:count()){
+        
+        Dat = Tracks[A[X,string],table]
+        
+        if(Dat:count()){
+        
+            XP = max(XP,max(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YP = max(YP,max(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZP = max(ZP,max(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+            XN = min(XN,min(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YN = min(YN,min(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZN = min(ZN,min(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+        }else{
+            
+            error("Zoneblock could not find the locale \""+A[X,string])
+            
+        }
+        
+    }
+    
+    for(X = 1,A:count() * N){
+        
+        Tracks[A[X,string],table]["boxhi",vector] = vec(XP,YP,ZP)
+        Tracks[A[X,string],table]["boxlo",vector] = vec(XN,YN,ZN)
+        
+    }
+    
+    return table(vec(XP,YP,ZP),vec(XN,YN,ZN))
+    
+}
+
+
+Tracks["mm1",table] = table(
+    "name" = "Madison Material Associates",
+    "boxhi" = vec(6824,-11389,-581),"boxlo" = vec(2006,-14068,-785),
+    "spawnpos" = vec(6724,-13968,-685),
+    "spawnang" = 63,
+    "work" = array(6,"general_boxcar","empty","materials")
+)
+Tracks["mm2",table] = table(
+    "name" = "Madison Material Associates",
+    "boxhi" = vec(6695,-12324,-583),"boxlo" = vec(2685,-14584,-785),
+    "spawnpos" = vec(6595,-14484,-685),
+    "spawnang" = 63,
+    "work" = array(6,"general_boxcar","empty","materials")
+)
+zoneblock(1,array("mm1","mm2"))
+
+Tracks["njrc1",table] = table(
+    "area" = "njrcN",
+    "name" = "Refinery|Tank Loading",
+    "boxhi" = vec(-12500,15000,2),"boxlo" = vec(-16800,14000,-214), "boxrot" = 45,
+    "spawnpos" = vec(-15394,13228,-100),
+    "spawnang" = -13,
+    "work" = array(4,"ethanol_tanker","empty","loaded")
+)
+Tracks["njrc2",table] = table(
+    "area" = "njrcS",
+    "name" = "Refinery|Sand & Pellet Track",
+    "boxhi" = vec(-9572,12514,-136),"boxlo" = vec(-10652,8585,-337),
+    "spawnpos" = vec(-10552,8685,-237),
+    "spawnang" = -13,
+    "work" = array(3,"sand_hopper","loaded","empty")
+)
+Tracks["njrc3",table] = table(
+    "area" = "njrcS",
+    "name" = "Refinery|Tank Unloading",
+    "boxhi" = vec(-7538,12794,-121),"boxlo" = vec(-9580,8906,-337),
+    "spawnpos" = vec(-7638,9006,-237),
+    "spawnang" = 27,
+    "work" = array(4,"oil_tanker","loaded","empty")
+)
+Tracks["njrc4",table] = table( 
+    "area" = "njrcS",
+    "name" = "Refinery|Bag Loading Warehouse",
+    "boxhi" = vec(-5219,12115,-88),"boxlo" = vec(-5549,8566,-289),
+    "spawnpos" = vec(-5321,8666,-188),
+    "spawnang" = 0,
+    "work" = array(3,"general_boxcar","empty","bags")
+)
+
+TX3 = zoneblock(0,array("njrc1","njrc2","njrc3","njrc4"))
+Tracks["njrcN",table] = table("name" = "North New Jersey Refinery","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+TX3 = zoneblock(0,array("njrc1","njrc2","njrc3","njrc4"))
+Tracks["njrcS",table] = table("name" = "North New Jersey Refinery","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+#[
+Tracks["bmz1",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Downtown City|Local Dropoff",228,146,39),
+    "boxhi" = vec(3196,-3483,274),"boxlo" = vec(-5,-3865,39), "boxrot" = 8,
+    "spawnpos" = vec(95,-3584,139),
+    "spawnang" = -91,
+    "work" = array(1.5,"general_boxcar",0.75,"general_tanker",0.75,"general_gondola")
+)]#
+
+
+Tracks["bmz2",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Downtown City|Grain Terminal",
+    "boxhi" = vec(6221,2000,363),"boxlo" = vec(6019,-940,163),
+    "spawnpos" = vec(6119,-840,263),
+    "spawnang" = 0,
+    "work" = array(4,"grain_hopper","empty","grain")
+)
+Tracks["bmz3",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Independent|Printing",
+    "boxhi" = vec(12093,-1745,336),"boxlo" = vec(8805,-3508,135),
+    "spawnpos" = vec(11993,-3408,235),
+    "spawnang" = 78,
+    "work" = array(2,"general_boxcar","paper","empty")
+)
+Tracks["bmz4",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Vandelay Industries",
+    "boxhi" = vec(9595,3779,335),"boxlo" = vec(9203,981,135),
+    "spawnpos" = vec(9305,3679,235),
+    "spawnang" = -180,
+    "work" = array(3,"general_boxcar","supplies","empty")
+)
+Tracks["bmz5",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Vandelay Industries",
+    "boxhi" = vec(9595,3779,335),"boxlo" = vec(9203,981,135),
+    "spawnpos" = vec(9495,3679,235),
+    "spawnang" = -180,
+    "work" = array(3,"general_boxcar","supplies","empty")
+)
+Tracks["bmz6",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Fortress Fabricators|Mill Track",
+    "boxhi" = vec(12248,53,336),"boxlo" = vec(10246,-296,135),
+    "spawnpos" = vec(12148,-49,235),
+    "spawnang" = 90,
+    "work" = array(1,"general_flatcar","empty","loaded",1,"general_gondola","empty","loaded")
+)
+Tracks["bmz7",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Fortress Fabricators|Loading Point",
+    "boxhi" = vec(12030,3766,336),"boxlo" = vec(10228,-85,135),
+    "spawnpos" = vec(11930,3666,235),
+    "spawnang" = 166,
+    "work" = array(3,"steel","empty","loaded",1,"general_boxcar","empty","materials")
+)
+Tracks["joe1",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Ironside Electronics",
+    "boxhi" = vec(7853,6982,384),"boxlo" = vec(7651,4331,183),
+    "spawnpos" = vec(7752,4431,283),
+    "spawnang" = -2,
+    "work" = array(1,"general_boxcar","supplies","electronics")
+)
+Tracks["joe2",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Timothy Tailor Tools",
+    "boxhi" = vec(7853,10872,384),"boxlo" = vec(7651,6939,183),
+    "spawnpos" = vec(7751,10772,284),
+    "spawnang" = 180,
+    "work" = array(0.25,"general_boxcar","supplies","tools")
+)
+Tracks["joe3",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Spencer Textiles",
+    "boxhi" = vec(7853,13900,403),"boxlo" = vec(7299,10878,183),
+    "spawnpos" = vec(7751,13800,283),
+    "spawnang" = 180,
+    "work" = array(2,"general_boxcar","empty","textiles")
+)
+Tracks["joe4",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Spencer Textiles",
+    "boxhi" = vec(7853,13900,403),"boxlo" = vec(7299,10878,183),
+    "spawnpos" = vec(7399,13699,283),
+    "spawnang" = -180,
+    "work" = array(1,"general_boxcar","empty","textiles")
+)
+Tracks["joe5",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Mackley Autos",
+    "boxhi" = vec(5500,10000,384),"boxlo" = vec(5100,8148,183),"boxrot" = -28,
+    "spawnpos" = vec(5699,8248,283),
+    "spawnang" = 27,
+    "work" = array(3,"general_boxcar_nonhigh","autoparts","empty")
+)
+Tracks["joe6",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Berkshire Brewery|Tank Spot",
+    "boxhi" = vec(7000,13900,384),"boxlo" = vec(4400,13600,183), "boxrot" = -45,
+    "spawnpos" = vec(6246,14102,283),
+    "spawnang" = 114,
+    "work" = array(2,"chemical_tanker","loaded","empty")
+)
+Tracks["joe7",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Berkshire Brewery|Loading Dock",
+    "boxhi" = vec(4878,15856,401),"boxlo" = vec(4484,13491,183),
+    "spawnpos" = vec(4584,15756,283),
+    "spawnang" = 179,
+    "work" = array(1,"chemical_tanker","loaded","empty",2,"general_boxcar","brewing","beer")
+)
+Tracks["joe8",table] = table(
+    "area" = "downtown", "excl" = "downtown",
+    "name" = "Berkshire Brewery|Loading Dock",
+    "boxhi" = vec(4878,15856,401),"boxlo" = vec(4484,13491,183),
+    "spawnpos" = vec(4777,15753,283),
+    "spawnang" = 180,
+    "work" = array(1,"chemical_tanker","loaded","empty",2,"general_boxcar","brewing","beer")
+)
+
+TX3 = zoneblock(0,array("bmz2","bmz3","bmz4","bmz5","bmz6","bmz7","joe1","joe2","joe3","joe4","joe5","joe6","joe7","joe8"))
+Tracks["downtown",table] = table("name" = "Downtown Industrial Zone","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+
+Tracks["infra1",table] = table(
+"area" = "infra",
+"name" = "Transload Track",
+"boxhi" = vec(10557,10138,536),"boxlo" = vec(8344,8644,335),
+"spawnpos" = vec(8444,8744,435),
+"spawnang" = -89,
+"work" = array(1,"general_flatcar","empty","loaded")
+)
+Tracks["infra2",table] = table(
+"area" = "infra",
+"name" = "Dockside Complex",
+"boxhi" = vec(11237,11113,547),"boxlo" = vec(10525,8478,335),
+"spawnpos" = vec(10625,8578,435),
+"spawnang" = 0,
+"work" = array(1,"general_boxcar","plastics","empty")
+)
+Tracks["infra3",table] = table(
+"area" = "infra",
+"name" = "Dockside Complex",
+"boxhi" = vec(11237,11113,547),"boxlo" = vec(10525,8478,335),
+"spawnpos" = vec(11137,8584,435),
+"spawnang" = 0,
+"work" = array(1,"general_boxcar","empty","supplies")
+)
+TX3 = zoneblock(0,array("infra1","infra2","infra3"))
+Tracks["infra",table] = table("name" = "Stalburg Lake Dock","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector]+vec(0,-500,0))
+
+
+Tracks["hag1",table] = table(
+"area" = "hagerind",
+"name" = "Anaheim Electronics",
+"boxhi" = vec(12749,7615,707),"boxlo" = vec(12547,5734,503),
+"spawnpos" = vec(12648,7515,603),
+"spawnang" = 178,
+"work" = array(4,"general_boxcar","supplies","electronics")
+)
+Tracks["hag2",table] = table(
+"area" = "hagerind",
+"name" = "Rampton|Lumber Co",
+"boxhi" = vec(15812,7504,704),"boxlo" = vec(15419,5186,503),
+"spawnpos" = vec(15711,7404,604),
+"spawnang" = -180,
+"work" = array(1,"flatcar_wood wood_gondola","wood","empty")
+)
+Tracks["hag3",table] = table(
+"area" = "hagerind",
+"name" = "Lagendorf Baked Goods",
+"boxhi" = vec(12749,5778,704),"boxlo" = vec(12547,2070,503),
+"spawnpos" = vec(12649,2170,603),
+"spawnang" = 0,
+"work" = array(2,"general_boxcar","baking","empty",2,"flour","loaded","empty")
+)
+Tracks["hag4",table] = table(
+"area" = "hagerind",
+"name" = "Silas George Tools",
+"boxhi" = vec(12749,2155,704),"boxlo" = vec(12547,-161,503),
+"spawnpos" = vec(12647,2055,604),
+"spawnang" = 180,
+"work" = array(4,"general_boxcar","supplies","tools")
+)
+Tracks["hag5",table] = table(
+"area" = "hagerind",
+"name" = "Bradford Plastics|Shipping Platform",
+"boxhi" = vec(13173,-941,715),"boxlo" = vec(12549,-3055,503),
+"spawnpos" = vec(13073,-2955,603),
+"spawnang" = 16,
+"work" = array(3,"general_boxcar","empty","plastics")
+)
+Tracks["hag6",table] = table(
+"area" = "hagerind",
+"name" = "Bradford Plastics|Receiving Dock",
+"boxhi" = vec(13965,1000,704),"boxlo" = vec(13565,-2952,503),
+"spawnpos" = vec(13863,-2852,603),
+"spawnang" = 0,
+"work" = array(3,"chemical_tanker","loaded","empty",5,"general_boxcar","ingredients","plastics")
+)
+Tracks["infra4",table] = table(
+"area" = "hagerind",
+"name" = "Warehouse Company",
+"boxhi" = vec(15405,15495,704),"boxlo" = vec(14491,9262,503),
+"spawnpos" = vec(15304,15395,603),
+"spawnang" = -179,
+"work" = array(6,"general_boxcar","empty","supplies",2,"general_flatcar","empty","loaded")
+)
+
+TX3 = zoneblock(0,array("hag1","hag2","hag3","hag4","hag5","hag6","infra4"))
+Tracks["hagerind",table] = table("name" = "Hagerstown Industrial Area","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+
+
+Tracks["tch1",table] = table(
+"name" = "Lumber Mill|Log Dropoff",
+"boxhi" = vec(8913,-9907,1080),
+"boxlo" = vec(5737,-10121,855),
+"spawnpos" = vec(5837,-10007,955),
+"spawnang" = -91,
+"work" = array(6,"log","loaded","empty")
+)
+Tracks["tch2",table] = table(
+"name" = "Lumber Mill|Log Dropoff",
+"boxhi" = vec(8884,-10099,1056),
+"boxlo" = vec(5737,-10301,855),
+"spawnpos" = vec(5837,-10200,955),
+"spawnang" = -90,
+"work" = array(6,"log","loaded","empty")
+)
+
+#zoneblock(1,array("tch1","tch2"))
+Tracks["tch3",table] = table(
+"name" = "Lumber Mill|Outlet Track",
+"boxhi" = vec(10520,-14698,1136),
+"boxlo" = vec(6740,-15149,935),
+"spawnpos" = vec(10420,-15047,1035),
+"spawnang" = 90,
+"work" = array(6,"flatcar_wood wood_gondola","empty","loaded")
+)
+
+
+
+Tracks["ore1",table] = table(
+"name" = "Ore Loader",
+"boxhi" = vec(-9020,-3853,1364),
+"boxlo" = vec(-9229,-6721,1147),
+"spawnpos" = vec(-9128,-6621,1247),
+"spawnang" = -1,
+"work" = array(2,"ore","empty","loaded")
+)
+Tracks["ore2",table] = table(
+"name" = "Ore Loader",
+"boxhi" = vec(-9160,-3888,1348),
+"boxlo" = vec(-9421,-6658,1147),
+"spawnpos" = vec(-9319,-6558,1247),
+"spawnang" = 0,
+"work" = array(2,"ore","empty","loaded")
+)
+zoneblock(1,array("ore1","ore2"))
+
+
+Tracks["log1",table] = table(
+"name" = "Branchwood|Log Camp",
+"boxhi" = vec(-12758,9117,1972),
+"boxlo" = vec(-13612,5005,1771),
+"spawnpos" = vec(-12858,9017,1871),
+"spawnang" = 166,
+"work" = array(6,"log","empty","loaded")
+)
+Tracks["log2",table] = table(
+"name" = "Branchwood|Log Camp",
+"boxhi" = vec(-12643,9057,1975),
+"boxlo" = vec(-13613,3667,1771),
+"spawnpos" = vec(-12745,8957,1872),
+"spawnang" = -180,
+"work" = array(6,"log","empty","loaded")
+)
+zoneblock(1,array("log1","log2"))
+
+Tracks["sea1",table] = table(
+"name" = "Tropicana|Tank Track",
+"area" = "tropicana",
+"boxhi" = vec(-381,3603,1866),
+"boxlo" = vec(-4252,2101,1663),
+"spawnpos" = vec(-481,3503,1763),
+"spawnang" = 90,
+"work" = array(3,"general_tanker","loaded","empty")
+)
+Tracks["sea2",table] = table(
+"name" = "Tropicana|Tank Track",
+"area" = "tropicana",
+"boxhi" = vec(-378,3413,1863),
+"boxlo" = vec(-4198,1968,1663),
+"spawnpos" = vec(-478,3311,1763),
+"spawnang" = 90,
+"work" = array(3,"general_tanker","loaded","empty")
+)
+zoneblock(1,array("sea1","sea2"))
+
+Tracks["sea3",table] = table(
+"name" = "Tropicana|Corridor Track",
+"area" = "tropicana",
+"boxhi" = vec(-325,1045,1887),
+"boxlo" = vec(-4482,650,1663),
+"spawnpos" = vec(-425,945,1763),
+"spawnang" = 90,
+"work" = array(4,"general_boxcar","packing","empty")
+)
+
+Tracks["tropicana",table] = table("name" = "Tropicana Plant","boxhi" = vec(-42,3894,3449),"boxlo" = vec(-7707,-8345,1522))
+
+Tracks["atl1",table] = table(
+"name" = "Atlantic Shipping",
+"boxhi" = vec(7117,-3879,2303),
+"boxlo" = vec(6851,-6985,2095),
+"spawnpos" = vec(7015,-6885,2195),
+"spawnang" = 0,
+"work" = array(4,"general_boxcar","empty","materials")
+)
+Tracks["atl2",table] = table(
+"name" = "Atlantic Shipping",
+"boxhi" = vec(6925,-3885,2296),
+"boxlo" = vec(6723,-6984,2095),
+"spawnpos" = vec(6825,-6884,2195),
+"spawnang" = 0,
+"work" = array(4,"general_boxcar","empty","supplies")
+)
+zoneblock(1,array("atl1","atl2"))
+
+Tracks["alb1",table] = table(
+"name" = "Big Bill|Hell's Scrapyard",
+"boxhi" = vec(11325,-414,2920),
+"boxlo" = vec(11123,-3550,2719),
+"spawnpos" = vec(11225,-514,2819),
+"spawnang" = 180,
+"work" = array(4,"scrap","empty","loaded")
+)
+Tracks["alb2",table] = table(
+"name" = "Red Shed|Distillery",
+"boxhi" = vec(14000,-3988,2788),
+"boxlo" = vec(13000,-9948,2583),
+"spawnpos" = vec(12070,-9848,2683),
+"spawnang" = -26,
+"work" = array(2,"general_boxcar","brewing","empty",1,"chemical_tanker","loaded","empty")
+)
+
+Tracks["s1",table] = table(
+"area" = "staging",
+"name" = "South Staging",
+"boxhi" = vec(15109,5429,-685),
+"boxlo" = vec(14824,-3499,-889),
+"spawnpos" = vec(14924,5329,-789),
+"spawnang" = -166,
+"excl" = "spawn",
+"inbound" = 1
+)
+Tracks["s2",table] = table(
+"area" = "staging",
+"name" = "South Staging",
+"boxhi" = vec(14917,5435,-673),
+"boxlo" = vec(14707,-2724,-889),
+"spawnpos" = vec(14815,5335,-789),
+"spawnang" = -180,
+"excl" = "spawn"
+)
+Tracks["s3",table] = table(
+"area" = "staging",
+"name" = "South Staging",
+
+"boxhi" = vec(14725,6205,-688),
+"boxlo" = vec(14523,-1968,-889),
+"spawnpos" = vec(14623,6105,-788),
+"spawnang" = 180,
+"excl" = "spawn"
+)
+Tracks["s4",table] = table(
+"area" = "staging",
+"name" = "South Staging",
+
+"boxhi" = vec(14533,6938,-688),
+"boxlo" = vec(14331,-1179,-889),
+"spawnpos" = vec(14432,6838,-789),
+"spawnang" = -180,
+"excl" = "spawn"
+)
+Tracks["s5",table] = table(
+"area" = "staging",
+"name" = "South Staging",
+
+"boxhi" = vec(14401,7645,-688),
+"boxlo" = vec(14139,-1109,-889),
+"spawnpos" = vec(14241,7545,-789),
+"spawnang" = -180,
+"excl" = "spawn"
+)
+
+TX3 = zoneblock(0,array("s1","s2","s3","s4","s5"))
+Tracks["staging",table] = table("name" = "South Staging","boxhi" = vec(16000),"boxlo" = -vec(16000),"inbound" = 1)
+
+Tracks["hgy1",table] = table(
+"area" = "hager",
+"name" = "Hagerstown Yard",
+
+"boxhi" = vec(14919,5300,715),
+"boxlo" = vec(13571,1829,503),
+"spawnpos" = vec(14819,1929,603),
+"spawnang" = 23
+)
+Tracks["hgy2",table] = table(
+"area" = "hager",
+"name" = "Hagerstown Yard",
+
+"boxhi" = vec(14920,4122,703),
+"boxlo" = vec(13335,1059,503),
+"spawnpos" = vec(14820,1159,603),
+"spawnang" = 22
+)
+Tracks["hgy3",table] = table(
+"area" = "hager",
+"name" = "Hagerstown Yard",
+
+"boxhi" = vec(14919,3319,704),
+"boxlo" = vec(13325,104,503),
+"spawnpos" = vec(14819,204,603),
+"spawnang" = 21
+)
+Tracks["hgy4",table] = table(
+"area" = "hager",
+"name" = "Hagerstown Yard",
+
+"boxhi" = vec(14901,5048,703),
+"boxlo" = vec(13251,-620,503),
+"spawnpos" = vec(14801,-520,603),
+"spawnang" = 21
+)
+TX3 = zoneblock(0,array("hgy1","hgy2","hgy3","hgy4"))
+Tracks["hager",table] = table("color" = vec(255,93,0),"name" = "Hagerstown Yard","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector]+vec(-700,-2500,0))
+
+
+Tracks["scy1",table] = table(
+"area" = "scythe",
+"name" = "Scythe Yard",
+
+"boxhi" = vec(478,-15017,1159),
+"boxlo" = vec(-6420,-15277,951),
+"spawnpos" = vec(-6320,-15176,1059),
+"spawnang" = -91
+)
+Tracks["scy2",table] = table(
+"area" = "scythe",
+"name" = "Scythe Yard",
+
+"boxhi" = vec(539,-14883,1159),
+"boxlo" = vec(-5655,-15085,951),
+"spawnpos" = vec(-5555,-14983,1059),
+"spawnang" = -90
+)
+Tracks["scy3",table] = table(
+"area" = "scythe",
+"name" = "Scythe Yard",
+
+"boxhi" = vec(1335,-14691,1166),
+"boxlo" = vec(-4889,-14899,951),
+"spawnpos" = vec(-4789,-14791,1059),
+"spawnang" = -90
+)
+Tracks["scy4",table] = table(
+"area" = "scythe",
+"name" = "Scythe Yard",
+
+"boxhi" = vec(1315,-14499,1159),
+"boxlo" = vec(-4103,-14701,951),
+"spawnpos" = vec(-4003,-14601,1059),
+"spawnang" = -90
+)
+Tracks["scy5",table] = table(
+"area" = "scythe",
+"name" = "Scythe Yard",
+
+"boxhi" = vec(681,-14307,1159),
+"boxlo" = vec(-4112,-14585,951),
+"spawnpos" = vec(-4012,-14485,1059),
+"spawnang" = -78
+)
+TX3 = zoneblock(0,array("scy1","scy2","scy3","scy4","scy5"))
+Tracks["scythe",table] = table("name" = "Scythe Yard","color" = vec(155, 150, 74),"boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector],"zonemin" = vec(-17000,-17000,900),"zonemax" = vec(17000,-12259,2700))
+
+Tracks["n1",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(7470,-15377,2920),
+"boxlo" = vec(97,-15605,2719),
+"spawnpos" = vec(-1850,-15504,2819),
+"spawnang" = -88,
+"excl" = "spawn"
+
+)
+Tracks["n2",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(6942,-15209,2924),
+"boxlo" = vec(94,-15413,2719),
+"spawnpos" = vec(-1850,-15311,2820),
+"spawnang" = -90,
+"excl" = "spawn"
+
+)
+Tracks["n3",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(6993,-15021,2920),
+"boxlo" = vec(95,-15280,2719),
+"spawnpos" = vec(-1850,-15121,2819),
+"spawnang" = -90,
+"excl" = "spawn"
+
+)
+Tracks["n4",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(6847,-14773,2920),
+"boxlo" = vec(95,-15029,2719),
+"spawnpos" = vec(-1850,-14928,2819),
+"spawnang" = -89,
+"excl" = "spawn"
+
+)
+Tracks["n5",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(6820,-14632,2929),
+"boxlo" = vec(94,-14837,2719),
+"spawnpos" = vec(-1850,-14736,2819),
+"spawnang" = -90,
+"excl" = "spawn"
+)
+Tracks["n6",table] = table(
+"area" = "staging",
+"name" = "North Staging",
+
+"boxhi" = vec(7605,-14443,2920),
+"boxlo" = vec(95,-14645,2719),
+"spawnpos" = vec(-1850,-14545,2819),
+"spawnang" = -89,
+"excl" = "spawn"
+)
+
+TX3 = zoneblock(0,array("n1","n2","n3","n4","n5","n6"))
+Tracks["staging",table] = table("name" = "North Staging","boxhi" = vec(16000),"boxlo" = -vec(16000),"inbound" = 1)
+
+Tracks["memphis",table] = table(
+"name" = "Memphis, TN",
+"boxhi" = vec(12192, 14032, -875),
+"boxlo" = vec(8144.00, 13733.00, -14268.00),
+"spawnpos" = vec(14924, 5329, -789),
+"spawnang" = -166,
+"work" = array(),
+"time" = 1,
+"excl" = "spawn"
+
+) #rock bottom
+
+Tracks["goldstone",table] = table(
+"name" = "Goldstone, AZ",
+"boxhi" = vec(14250, 14032, -875),
+"boxlo" = vec(8144.00, 11292, -14268.00),
+"spawnpos" = vec(14815, 5335, -789),
+"spawnang" = -180,
+"work" = array(),
+"time" = 1,
+"delete" = 1,"outbound" = 0.3,
+"excl" = "spawn"
+) #rock bottom
+
+Tracks["chicago",table] = table(
+"name" = "Chicago, IL",
+"boxhi" = vec(5224, -15860, 14940),
+"boxlo" = vec(-4580.00, -16210.00, 2785),
+"spawnpos" = vec(-1850, -15504, 2819),
+"spawnang" = -88,
+"work" = array(),
+"time" = 1,
+"delete" = 1,"outbound" = 0.3,
+"excl" = "spawn"
+)
+
+#[
+Tracks["ogden",table] = table(
+"name" = "Ogden, UT",
+"boxhi" = vec(160, -15860, 14940),
+"boxlo" = vec(-4580.00, -16210.00, 2830),
+"spawnpos" = vec(-1850, -15311, 2820),
+"spawnang" = -90,
+"work" = array(),
+"time" = 1,
+"excl" = "spawn"
+) #ascension
+]#
+
+
+
+
+#"memphis",0.075,"ogden",0.075
+Segments["201",table] = table(
+    "min" = 4,"max" = 10,
+    "job" = "Job 201",
+    "name" = "\"River Runner\"",
+    "desc" = "SB Run-thru, Chicago, IL to Goldstone, AZ",
+    "routing" = table(array("staging","chicago"),array("scythe"),array("goldstone")))
+    
+#[Segments["202",table] = table(
+    "job" = "Job 202",
+    "name" = "\"Midwest Link Express\"",
+    "desc" = "NB Run-thru, Memphis, TN to Ogden, UT",
+    230,130,130),
+    "routing" = table(array("staging","memphis"),array("scythe"),array("ogden")))]#
+
+#[Segments["223",table] = table(
+    "job" = "Job 223",
+    "name" = "\"Bluegrass Transfer\"",
+    "desc" = "Scythe SB Originating Transfer to Memphis, TN",
+    100,220,180),
+    "routing" = table(array("scythe"),array("memphis")))]#
+    
+Segments["224",table] = table(
+    "min" = 4,"max" = 10,
+    "job" = "Job 224",
+    "name" = "\"Windy City Transfer\"",
+    "desc" = "Scythe NB Originating Transfer to Chicago, IL",
+    "routing" = table(array("scythe"),array("chicago")))
+
+#[Segments["245",table] = table(
+    "job" = "Job 245",
+    "name" = "UP Transfer",
+    250,160,130),
+    "routing" = table(array("staging","ogden"),array("scythe")))]#
+    
+#[Segments["246",table] = table(
+    "job" = "Job 246",
+    "name" = "ATSF Transfer",
+    10,120,240),
+    "routing" = table(array("staging","goldstone"),array("scythe")))]#
+    
+Segments["246",table] = table(
+    "job" = "Inbound",
+    "name" = "Transfer",
+    "routing" = table(array("staging","goldstone"),array("scythe")))
+
+Segments["399",table] = table(
+    "min" = 4,"max" = 10,
+    "job" = "Job 399",
+    "name" = "Hagerstown Transfer",
+    "routing" = table(array("scythe"),array("hager")))
+
+Segments["398",table] = table(
+    "min" = 4,
+    "job" = "Job 398",
+    "name" = "Scythe Transfer",
+    "routing" = table(array("hager"),array("scythe")))
+
+Segments["549",table] = table(
+    "job" = "Job 549",
+    "name" = "Stalburg Dock Work",
+    "routing" = table(array("hager"),array("infra"),array("hager")))
+
+Segments["581",table] = table(
+    "min" = 4,
+    "job" = "Job 581",
+    "name" = "\"Downtown Job Transfer\"",
+    "routing" = table(array("scythe","hager"),array("downtown")))
+Segments["582",table] = table(
+    "job" = "Job 582",
+    "name" = "\"Downtown Job Return\"",
+    "routing" = table(array("downtown"),array("scythe")))
+
+Segments["501",table] = table(
+    "job" = "Job 501",
+    "name" = "\"Combine Local\" North Shorts",
+    "routing" = table(array("scythe"),array("ore1","ore2"),array("tropicana"),array("atl1","atl2"),array("alb1","alb2"),array("atl1","atl2"),array("tropicana"),array("scythe")))
+
+Segments["644",table] = table(
+    "job" = "Job 644",
+    "name" = "\"Lumber Job\"",
+    "routing" = table(array("scythe"),array("log1","log2"),array("tch1","tch2"),array("log1","log2"),array("scythe")))
+
+Segments["805",table] = table(
+    "job" =  "Job 805",
+    "name" = "\"The Antlion\" South Local",
+    "routing" = table(array("hager"),array("njrcS"),array("mm1","mm2"),array("njrcN")))
+    
+Segments["804",table] = table(
+    "job" =  "Job 804",
+    "name" = "\"The Antlion\" Local Returns",
+    "routing" = table(array("njrcS"),array("mm1","mm2"),array("njrcN"),array("scythe")))
+    
+Segments["999",table] = table(
+    "job" =  "Job 999",
+    "name" = "Scythe Local Work",
+    "routing" = table(array("scythe"),array("tch3"),array("scythe")))
+    
+Segments["444",table] = table(
+    "job" =  "Job 444",
+    "name" = "Hagerstown Local Work",
+    "routing" = table(array("hager"),array("hagerind"),array("hager")))
+
+
+Segments["0",table] = table("job" = "Extra Train","color" = vec(255,0,255))
+Segments["loc",table] = table("job" = "Local Work","color" = vec(200))
+
+
+
+#WorldMarks:pushArray(array("ascension",vec(1283,-16302,3025),90))
+WorldMarks:pushArray(array("alb2",vec(14205,-7996,2879),153))
+WorldMarks:pushArray(array("alb1",vec(11421,-1371,2950),180))
+WorldMarks:pushArray(array("atl1",vec(7598,-5625,2446),180))
+WorldMarks:pushArray(array("sea1",vec(-3154,3342,2102),304))
+WorldMarks:pushArray(array("sea3",vec(-3378,1266,2047),180))
+WorldMarks:pushArray(array("log1",vec(-13385,4162,2014),181))
+WorldMarks:pushArray(array("ore1",vec(-8996,-5889,1383),176))
+WorldMarks:pushArray(array("tch3",vec(8501,-14154,1240),270))
+WorldMarks:pushArray(array("tch1",vec(7238,-11078,1215),90))
+WorldMarks:pushArray(array("hag6",vec(13714,-2695,781),0))
+WorldMarks:pushArray(array("hag5",vec(13131,-2670,781),194))
+WorldMarks:pushArray(array("hag4",vec(12522,901,810),0))
+WorldMarks:pushArray(array("hag3",vec(12386,2859,740),0))
+WorldMarks:pushArray(array("hag1",vec(12555,6442,950),0))
+WorldMarks:pushArray(array("hag2",vec(16113,6168,900),268))
+WorldMarks:pushArray(array("infra4",vec(15282,11655,837),267))
+WorldMarks:pushArray(array("infra2",vec(10893,8190,643),90))
+WorldMarks:pushArray(array("infra1",vec(9258,9347,620),360))
+WorldMarks:pushArray(array("joe6",vec(5701,13998,449),296))
+WorldMarks:pushArray(array("joe7",vec(4268,14750,606),360))
+WorldMarks:pushArray(array("joe3",vec(7990,13487,548),180))
+WorldMarks:pushArray(array("joe2",vec(7879,9711,418),180))
+WorldMarks:pushArray(array("joe1",vec(7956,5279,498),180))
+WorldMarks:pushArray(array("joe5",vec(5160,9584,523),27))
+WorldMarks:pushArray(array("bmz2",vec(5994,1541,468),360))
+WorldMarks:pushArray(array("bmz4",vec(9586,1889,394),180))
+WorldMarks:pushArray(array("bmz7",vec(11649,1771,407),166))
+WorldMarks:pushArray(array("bmz6",vec(10948,-209,500),90))
+WorldMarks:pushArray(array("bmz3",vec(9830,-3265,370),167))
+#WorldMarks:pushArray(array("bmz1",vec(1670,-3000,279),0))
+WorldMarks:pushArray(array("njrc4",vec(-5149,11506,-68),170))
+WorldMarks:pushArray(array("njrc2",vec(-10335,11514,18),352))
+WorldMarks:pushArray(array("njrc3",vec(-8642,11652,-103),184))
+WorldMarks:pushArray(array("njrc1",vec(-12768,16010,-2),270))
+WorldMarks:pushArray(array("mm1",vec(4153,-15153,-434),81))
+#WorldMarks:pushArray(array("rockbottom",vec(12333,13227,-659),0))
+
+Segments["804",table]["color",vector] = vec(142,36,255)
+Segments["805",table]["color",vector] = vec(115,131,255)
+Segments["398",table]["color",vector] = vec(255,107,30)
+Segments["444",table]["color",vector] = vec(30,158,77)
+Segments["582",table]["color",vector] = vec(255,243,109)
+Segments["644",table]["color",vector] = vec(177,175,43)
+Segments["999",table]["color",vector] = vec(150,33,152)
+Segments["399",table]["color",vector] = vec(255,70,106)
+Segments["224",table]["color",vector] = vec(178,192,232)
+Segments["581",table]["color",vector] = vec(255,188,30)
+Segments["549",table]["color",vector] = vec(93,199,30)
+Segments["501",table]["color",vector] = vec(47,124,164)
+Segments["246",table]["color",vector] = vec(30,117,255)
+Segments["201",table]["color",vector] = vec(224,167,143)
+
+Tracks["alb1",table]["color",vector] = vec(97,143,90)
+Tracks["alb2",table]["color",vector] = vec(120,30,108)
+Tracks["atl1",table]["color",vector] = Tracks["atl2",table]["color",vector] = vec(30,162,255)
+#Tracks["bmz1",table]["color",vector] = vec(175,177,30)
+Tracks["bmz2",table]["color",vector] = vec(114,175,255)
+Tracks["bmz3",table]["color",vector] = vec(255,121,252)
+Tracks["bmz4",table]["color",vector] = Tracks["bmz5",table]["color",vector] = vec(30,63,129)
+Tracks["bmz6",table]["color",vector] = vec(94,98,167)
+Tracks["bmz7",table]["color",vector] = Tracks["bmz8",table]["color",vector] = vec(255,96,30)
+Tracks["hag1",table]["color",vector] = vec(171,255,30)
+Tracks["hag2",table]["color",vector] = vec(30,208,190)
+Tracks["hag3",table]["color",vector] = vec(175,30,30)
+Tracks["hag4",table]["color",vector] = vec(175,104,104)
+Tracks["hag5",table]["color",vector] = vec(199,192,248)*0.5
+Tracks["hag6",table]["color",vector] = vec(124,255,255)
+Tracks["infra1",table]["color",vector] = vec(182,187,143)
+Tracks["infra2",table]["color",vector] = Tracks["infra3",table]["color",vector] = vec(105,221,166)
+Tracks["infra4",table]["color",vector] = vec(211,30,99)
+Tracks["joe1",table]["color",vector] = vec(93,30,30)
+Tracks["joe2",table]["color",vector] = vec(253,30,170)
+Tracks["joe3",table]["color",vector] = Tracks["joe4",table]["color",vector] = vec(111,30,255)
+Tracks["joe5",table]["color",vector] = vec(183,74,255)
+Tracks["joe6",table]["color",vector] = vec(146,255,110)
+Tracks["joe7",table]["color",vector] = Tracks["joe8",table]["color",vector] = vec(30,177,30)
+Tracks["mm1",table]["color",vector] = Tracks["mm2",table]["color",vector] = vec(173,255,196)
+Tracks["njrc1",table]["color",vector] = vec(255,213,106)
+Tracks["njrc2",table]["color",vector] = vec(255,166,174)
+Tracks["njrc3",table]["color",vector] = vec(30,180,115)
+Tracks["njrc4",table]["color",vector] = vec(255,101,110)
+Tracks["ore1",table]["color",vector] = Tracks["ore2",table]["color",vector] = vec(135,104,30)
+Tracks["sea1",table]["color",vector] = Tracks["sea2",table]["color",vector] = vec(255,171,30)
+Tracks["sea3",table]["color",vector] = vec(255,255,177)
+Tracks["tch3",table]["color",vector] = vec(45,103,30)
+
