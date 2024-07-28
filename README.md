@@ -12,8 +12,10 @@ Full setup is beyond the scope of a simple explanation; but here's a simple rund
 
 1. Spawn the correct OpsBox dupe for the map you intend to run from the `advdupe` folder.
 2. Spawn the latest version of the Carspawner via the E2 tool.
-3. Wait for the main Operations e2 to complete preprocessing.
+3. Wait for the main Operations E2 to complete preprocessing.
 4. Type the chat command .trains - observe the options.
-5. Type .train [option] from the previous list.
+5. Type .train [option] from the previous list. Example: `.train wrs` will create a WRS consist on SSGRSG.
 
 You may also do .inbound to begin queueing automatic inbound trains.
+
+If you have additional questions on setup, contact me through Discord: [sirmetaladon](discordapp.com/users/sirmetaladon)
