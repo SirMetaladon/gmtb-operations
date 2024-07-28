@@ -18,4 +18,4 @@ Full setup is beyond the scope of a simple explanation; but here's a simple rund
 
 You may also do .inbound to begin queueing automatic inbound trains.
 
-If you have additional questions on setup, contact me through Discord: [sirmetaladon](discordapp.com/users/sirmetaladon)
+If you have additional questions on setup, contact me through Discord: [sirmetaladon](https://discordapp.com/users/sirmetaladon)
