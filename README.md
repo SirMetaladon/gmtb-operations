@@ -1,9 +1,9 @@
 # gmtb-operations
-Garry's Mod Trainbuild - Operations
+Garry's Mod Trainbuild Operations
 
-This is hosting location for Operations, an automated train management and routing system built by Metaladon. The main folder should be installed at `steamapps/common/garrysmod/garrysmod/`, which in turn is merged with the existing `data` folder. It contains both a `expression2` and `advdupe2` folders; one containing the hardware in code form, and the other pre-compiled OpsBox sets which should all be cross-compatible and installed with an existing config file.
+This is hosting location for Operations, an automated train management and routing system primarily built & maintained by Metaladon. It contains both `expression2` and `advdupe2` folders; the `expression2` folder holds the code, tooling, and configuration files, and the `advdupe` folder holds compiled OpsBox sets, compatible components pre-staged for easy use. The main folder is installed at `steamapps/common/garrysmod/garrysmod/`, which merges with the existing `data` folder at the same location.
 
-Additionally, tools for building your own configs are provided in `expression2/tools`, and the Job Selector system by TBEIndustries is provided.
+Additionally, tools for building your own configs are provided in `expression2/tools`, and the Job Selector system by TBEIndustries is included.
 
 You will also need a copy of the [Convenient Classic Carspawner](https://github.com/SirMetaladon/convenient-classic-carspawner), located here.
 
