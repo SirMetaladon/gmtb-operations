@@ -17,7 +17,7 @@ TargetCarcount = 200
 
 Map = "gm_miamisub"
 ConfigName = "Miami Sub Standard v0.6"
-ConfigLoaded = "v1.457"
+ConfigLoaded = "v1.461"
 Era = "2000s"
 
 function table zoneblock(N,A:array){
