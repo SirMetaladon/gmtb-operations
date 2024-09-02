@@ -1,4 +1,4 @@
-@name opsconfig/ssg2_standard
+@name  GMTB_Operations/opsconfig/ssg2_standard
 @persist ConfigLoaded:string
 
 IndTurn = 100 #How many minutes it takes to change a car to unloaded once it reaches an industry

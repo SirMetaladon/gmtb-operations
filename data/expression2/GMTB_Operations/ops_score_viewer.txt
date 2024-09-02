@@ -1,4 +1,4 @@
-@name OPS Score Viewer
+@name GMTB_Operations/OPS Score Viewer
 @inputs EGP:wirelink EGP2:wirelink Scores:table Names:table TimeElapsed SegmentsActive:table TargetCarcount
 @persist Sortal:string SortDirection Segments:table ConfigName:string
 @trigger none

@@ -1,4 +1,4 @@
-@name opsconfig/lober_jobs
+@name GMTB_Operations/opsconfig/lober_jobs
 @persist ConfigLoaded:string
 
 IndTurn = 50 #How many minutes it takes to change a car to unloaded once it reaches an industry

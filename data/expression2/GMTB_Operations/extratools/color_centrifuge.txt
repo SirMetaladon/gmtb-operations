@@ -1,4 +1,4 @@
-@name Color Centrifuge
+@name GMTB_Operations/extratools/Color Centrifuge
 @persist Colors:table Increment Keys:array E:entity Scale Phase:string HID Overall Print:array
 @outputs Colors:table
 

@@ -1,4 +1,4 @@
-@name OPS Score Tracker v1.47
+@name GMTB_Operations/OPS Score Tracker v1.47
 @inputs MainEntityList:table
 
 @persist [CarData Scores CurrentlyInteracting CurrInteractUNSAFE LastPlayerToInteract Names CommandStack EntSeenThisScan ExcludedEntities]:table [SaveFile MainListKeys Print]:array ScanInterval HID IdleFreezeInterval PreviousScanTime ScanIncrement FreezingOn SessionID

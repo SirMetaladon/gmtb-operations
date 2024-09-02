@@ -1,4 +1,4 @@
-@name opsconfig/wrefingley_chaos
+@name  GMTB_Operations/opsconfig/wrefingley_chaos
 @persist ConfigLoaded
 
 IndTurn = 30 #How many minutes it takes to change a car to unloaded once it reaches an industry (reccomended 20-30 mins)
