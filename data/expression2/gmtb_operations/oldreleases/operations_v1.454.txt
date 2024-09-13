@@ -1,0 +1,2399 @@
+@name Operations v1.455
+@persist HID TargetCarcount PlaceholderID UniqueCommandID TT Xt CurrentCarcount StoredCarcount BlockIncrX TypeIncr IncrX IncrY OverallSpawned IndTurn StartTime ColorTransformer InboundVariance WaitToRefire AutomaticSpawnsEnabled
+
+@persist [MainEntityList Tracks CarsCreatedByCommand AllDestinationsBTR LocalDestinationsBTR LocalSourcesBTR AllSourcesBTR ToSendOut WorldMarks Adder CommandStack CarspawnerCommandStack SpawnCommandsByLocation TrackReservations]:table
+@persist [Segments RouteKey Routes SegmentsActive JobsStored CarsAvailable CarsReady ToEvaluate Trains BlocksOK CardsCreatedByCommand TrafficRatiobyType FromTrafficRatiobyType SpawningGroups SavedSpawnData TrainPresets]:table
+
+@persist [Era HoldState Pairs PrevInbound Name]:string
+@persist [LocsToMark ShareAllRoller InboundTracksRoller OutboundTracksRoller TracksKeys WorldMarkEnts SortedTimer CarsToScan CarsToHold LocationKeys CheckDeletions CarTypesList CarsRoller TimersToRecheck TracksToProcess ToSpawnData RouteReturn ToPrintTrains InboundTrains]:array
+
+@outputs TypeIncr IncrX IncrY ConfigLoaded:string TargetCarcount
+
+@inputs Response Reload:table IncRel
+@outputs CurrentCarcount [MainEntityList CommandStack SegmentsActive]:table SortedTimers:array ConfigName:string
+@persist Inc Signal:table SignalStorage:table
+@outputs Inc Signal:table SignalStorage:table
+
+@trigger none
+
+@model models/props_lab/servers.mdl
+
+if(first() | dupefinished()){
+    
+    #v1.44  - Removing technical debt related to the Area system + lading work
+    #v1.441 - fixing a ton of bugs and oversights related to the new system
+    #v1.442 - northward implementation + data cleanup code
+    #v1.443 - working on holding, automatic inbounds, job board
+    #v1.444 - migrate "route" to it's own command
+    #v1.45  - consolidating features, fixed automatic inbounds
+    #v1.451 - map check, fix bugs, location exclusion
+    #v1.452 - code cleanup round, locations w/o move bonuses
+    #v1.453 - automatic wiring, better display name, inbound count variance
+    #v1.454 - hotfix for quota-ing on segments, modified config exclusion mechanism
+    #v1.455 - output for Target, modification to .trains spawn
+    
+    ####SETTINGS#############################################################
+
+    Era = "1970s" #Set the Era string here. Use the same names as the Carspawner would.
+    
+    InboundVariance = 0.33
+    
+    #Configuration file for the map
+    
+    #include "opsconfig/ssg_rsg_jobs"
+    ##include "opsconfig/ssg_rsg_jobs_nocustom"
+    ##include "opsconfig/ssg_rsg_no_wolfram"
+    ##include "opsconfig/ssg_rsg_add_ftlauderdale"
+    ##include "opsconfig/lober_jobs"
+    ##include "opsconfig/ssg_rsg_daisychain"
+    ##include "opsconfig/wrefingley_chaos"
+    
+    ####END_SETTINGS#########################################################
+    
+    
+    ###Variable Declarations
+    
+    Router = table()
+    SignalStorage = table()
+    ToSendOut = table()
+    ShareAllRoller = array(0)
+    InboundTracksRoller = array(0)
+    OutboundTracksRoller = array(0)
+    HID = 0
+    ColorTransformer = random(90,270)
+    RouteKey = table()
+    Routes = table()
+    
+    
+    ### Functions
+    
+    function vector newabs(V:vector){
+        
+        return vec(abs(V:x()),abs(V:y()),abs(V:z()))
+        
+    }
+    
+    function number boxed(V1:vector,V2:vector,V3:vector){
+        
+        #If V3 is within max V1 and min V2, return 1.
+        
+        if(V3 == vec(0)){
+            return 0
+        }
+        
+        if(V1:distance(V2) > 0){
+        
+            return ((V1:x() >= V3:x()) + (V1:y() >= V3:y()) + (V1:z() >= V3:z()) + (V2:x() <= V3:x()) + (V2:y() <= V3:y()) + (V2:z() <= V3:z()) == 6)
+            
+        }
+        
+        return 0
+        
+    }
+
+    function number within(V:vector,S:string){
+        
+        #S is the location code for the current target location
+        
+        local CX = Tracks[S,table]["boxhi",vector]
+        local CN = Tracks[S,table]["boxlo",vector]
+        
+        local R = Tracks[S,table]["boxrot",number]
+        
+        
+        local V2 = V:rotateAroundAxis(vec(0,0,1),R)
+        
+        return boxed(CX,CN,V2)
+        
+    }
+    
+    #[Depreciated for now; will re-use to make variable length blocks in a future update
+    function number distrand(N,D){
+        
+        return 1
+        
+        return floor(N-random(0,N^D)^(1/D))+1
+        
+    }]#
+    
+    function increment(T:table,S:string,N){
+        
+        T[S,number] = T[S,number]+N
+        
+    }
+    
+    function string toString(R:array){
+        
+        #returns a string version of an array made of strings
+        
+        if(!R:count()){
+            
+            return ""
+            
+        }else{
+        
+            local S = R[1,string]
+            
+            for(X = 2,R:count()){
+                
+                S = S + ", "+R[X,string]
+                
+            }
+            
+            return S
+            
+        }
+        
+    }
+    
+    function callRoute(Loc:string,GoTo:string,Callback:string){
+        
+        local Data = Callback:explode("|")
+        local Case = Data[1,string]
+        local AuxDat = Data[2,string]
+        
+        switch(Case){
+        
+            case("FromSpawning"),  
+            
+                CommandStack:insertTable(1,table("command" = "GenerateRoute","Loc" = Loc,"GoTo" = GoTo))
+                
+            case("FromReroute"),
+            
+                CommandStack:pushTable(table("command" = "GenerateRoute","Loc" = Loc,"GoTo" = GoTo))
+                CommandStack:pushTable(table("command" = "RemarkCar","carid" = AuxDat))
+            
+            case("FromTraffic"),
+            
+                CommandStack:pushTable(table("command" = "GenerateRoute","Loc" = Loc,"GoTo" = GoTo))
+                CommandStack:pushTable(table("command" = "ReturnTrafficRoute","CarType" = AuxDat,"From" = Loc,"To" = GoTo))
+
+        }
+        
+    }
+    
+    function startTimer(S:string,N){
+        
+        local Index = 1
+        
+        while(SortedTimers[Index*2,number] < N & SortedTimers[Index*2,number]){
+            
+            Index++
+            
+        }
+        
+        SortedTimers:insertString(Index*2-1,S)
+        SortedTimers:insertNumber(Index*2,N)
+        
+    }
+    
+    function startEntityIDTimer(S:string,N){
+        
+        entity(S:toNumber()):setCarTagColor(vec(220))
+        
+        local TimerEnd = 0
+        
+        if(N != 0){
+    
+            #Relative to the System Time, in seconds
+            TimerEnd = systime() + max(Tracks[MainEntityList[S,table]["route",array][MainEntityList[S,table]["step",number],string]:explode("|")[2,string],table]["time",number],0.01)*60 #original time is in minutes
+            
+        }else{
+            
+            TimerEnd = systime()
+            
+        }
+        
+        MainEntityList[S,table]["timer end",number] = TimerEnd
+        
+        startTimer("CarID|"+S,TimerEnd)
+        
+    }
+    
+    function number safe(){ #Function that determines if the current iteration is out of processing time
+        
+        return minquota() > 1000
+ 
+    }
+    
+    function printM(Print:string){ #Fancy print
+        
+        local P = Print:explode("||")
+        
+        P[1,string] = "OPS: "+P[1,string]
+        
+        for(X = 1,P:count()){
+
+            printColor(vec(30,100,200),P[X,string])
+            
+        }
+        
+    }
+    
+    #rebuilt quadratic roller that should be a lot faster
+    function string rollW(D:array,Not:string){
+        
+        if(D:count() == 3){
+            
+            return D[3,string]
+            
+        }
+        
+        #example: Dat = (5, 1, data1, 3, data2, 5, data3)
+        #goal = 2
+        
+        #count is 7 
+        #CurrentPos should be 2
+        
+        #expected outcome = data2
+        
+        local Dat = D:clone()
+        
+        local Bad = Tracks[Not,table]["name",string]
+        local Fine = (Not == "")
+        local Goal = 0
+        
+        while(Dat:count() & safe()){
+        
+            Goal = random(0,Dat[1,number])
+            local CurrentPos = round(Dat:count()/4)
+            local Step = max(Dat:count()/8,1)
+            local Direction = 2
+            
+            while(Direction != 0){
+                
+                Direction = 0
+    
+                if(Dat[(CurrentPos-1)*2,number] > Goal){
+                    
+                    Direction = -1
+    
+                }elseif(Dat[CurrentPos*2,number] < Goal){
+                    
+                    Direction = 1
+                    
+                }
+                
+                CurrentPos = round(CurrentPos + Step*Direction)
+                
+                Step = max(Step*0.5,1)
+                
+            }
+    
+                    
+            if(Fine || (Tracks[Dat[CurrentPos*2+1,string],table]["name",string] != Bad)){
+                
+                return Dat[CurrentPos*2+1,string]
+                
+            }else{
+                
+                Dat:remove(CurrentPos*2+1)
+                Dat:remove(CurrentPos*2)
+                
+            }
+            
+        }
+
+        return ""
+        
+    }
+    
+    #text for world markers
+    function entity textworld(Str:string,Pos:vector,Ang){  
+        
+        local Display = Tracks[Str,table]["name",string]
+        local Vec = Tracks[Str,table]["color",vector]
+        
+        local Bloc = Display:upper():explode("|")
+        
+        local Mesh = p2mCreate(1,Pos,ang(0,Ang,0),16,vec(1))
+        #I would totally use MeshScale, but for some reason it's broken on some servers? wat
+        
+        Mesh:p2mSetMaterial("debug/debugdrawflat")
+        Mesh:p2mSetColor(Vec*1.1)
+        
+        #local Hypotenuse = ((Bloc:count()-1)*14)+10
+        local Centr = vec(0)
+
+        for(Y = 1, Bloc:count()){ #For each layer of the text
+            
+            local Text = Bloc[Y,string]:explode("")
+            local Back = -Text:count()*6-24
+
+            #For each text model, set the bodygroup and create 2 copies: one on each side if the text is not flat.
+            
+            for(X = 1,ceil(Text:count()/4)){    
+                
+                Bod = 0
+                
+                for(Z = 1, 4){
+                    
+                    local Byte = toByte(Text[(X*4)+Z-4,string])-65
+                    
+                    if(Byte < 0 | Byte >= 26){Byte = 26}
+                    
+                    Bod = Bod + Byte*(27^(Z-1))
+                    
+                }
+                
+                Mesh:p2mPushModel(1,"models/magtrains/reportingmark.mdl",array(1),
+                Centr+4*vec(((Y-1)*14)+10,Back+(X*48),0):rotateAroundAxis(vec(0,1,0),90),# + Position,
+                ang(0,0,0):rotateAroundAxis(vec(0,1,0),90),
+                vec(4),0,0,Bod)
+                
+            }
+            
+        }
+        
+        Mesh:p2mBuild()
+        
+        return Mesh
+        
+    }
+    
+    function send(T:table){
+        
+        SignalStorage:pushTable(T)
+        timer("send",1000)
+        
+    }
+    
+    function vector rotoformer(V:vector,N){
+        
+        return hsl2rgb(rgb2hsl(V)+vec(N,0,0))
+        
+    }
+    
+    function markcar(E:entity,Route:array,RteStep,NeedsHolding){
+
+        local JobTable = Segments[Route[RteStep,string]:explode("|")[1,string],table]
+        
+        local CurrentLocTable = Tracks[Route[RteStep,string]:explode("|")[2,string],table]
+        local FinalLocTable = Tracks[Route[Route:count(),string]:explode("|")[2,string],table]
+        
+        local PastLoc = Tracks[Route[RteStep-1,string]:explode("|")[2,string],table]
+
+        
+        if(NeedsHolding & PastLoc["zonemin",vector]:distance(PastLoc["zonemax",vector]) > 0){
+            
+            MainEntityList[E:id():toString(),table]["hold",number] = 1
+            
+        }
+        
+        
+        local Vec = JobTable["color",vector]
+            
+        if((FinalLocTable["name",string] == CurrentLocTable["name",string] & RteStep == Route:count()) | JobTable["usecolor",number]){
+
+            Vec = CurrentLocTable["color",vector]
+            
+        }
+        
+        if(MainEntityList[E:id():toString(),table]["timer end",number] != 0){
+            
+            Vec = vec(220)
+            
+        }
+        
+        if(MainEntityList[E:id():toString(),table]["hold",number] != 0){
+            
+            E:setCarTag("Set Aside for Later - Waiting on Cars\nGroup by Tag Color")
+            E:setCarTagColor(rotoformer(Vec,ColorTransformer))
+            
+        }else{
+            
+            local FD = "\nFinal Destination: "+FinalLocTable["name",string]:replace("|\n","\n"):replace("|"," ")
+            
+            if((FinalLocTable["name",string] == CurrentLocTable["name",string]) | JobTable["showfinal",number] == 0){
+            
+                FD = ""
+                
+            }
+            
+            if(JobTable["desc",string] != ""){
+                
+                DSC = "\n"+JobTable["desc",string]
+                
+            }
+    
+            E:setCarTag("Next Destination: "+CurrentLocTable["name",string]:replace("|\n","\n"):replace("|"," ") + "\n Via: "+JobTable["job",string]+" "+JobTable["name",string]+DSC+FD)
+            E:setCarTagColor(Vec)
+            
+        }
+        
+    }
+    
+    function number trackIsClear(CurrentLoc:string){
+        
+        local TrackData = Tracks[CurrentLoc,table]
+        
+        findInBox(TrackData["boxhi",vector]-vec(64,64,0),TrackData["boxlo",vector]+vec(64,64,0))
+        findClipToClass("prop_physics")
+        
+        R = findToArray()
+        
+        return (R:count() <= 0)
+        
+    }
+    
+    #Reclassifies cars according to standard rules.
+    function reclassifyCar(CarIDString:string){
+        
+        local CarData = MainEntityList[CarIDString,table]
+        
+        local Route = CarData["route",array]
+        local RteStep = CarData["step",number]
+        local CurrentLoc = Route[RteStep,string]:explode("|")[2,string]
+    
+        if(RteStep < Route:count()){ #If there's still places left to travel
+            
+            printM("\""+CarData["type",string]+"\" routed at "+CurrentLoc)
+            CarData["step",number] = RteStep + 1
+            
+            markcar(entity(CarIDString:toNumber()),Route,RteStep+1,1)
+            
+        }else{
+            
+            if(Tracks[CurrentLoc,table]["delete",number] != 0){
+                
+                for(Y = 1,CarData["ents",array]:count()){
+                    
+                    entity(CarData["ents",array][Y,number]):propDelete()
+                    
+                }
+                
+                MainEntityList:remove(CarIDString)
+                
+            }else{
+                
+                local Type = rollW(Tracks[CurrentLoc,table]["reload",table][CarData["type",string],array],"")
+                
+                if(Tracks[CurrentLoc,table]["noreload",number]){Type = MainEntityList[CarIDString,table]["type",string]}
+
+                local GoTo = rollW(AllDestinationsBTR[Type,array],CurrentLoc)
+
+                send(table("name" = "renew","ent" = CarIDString))
+                
+                callRoute(CurrentLoc,GoTo,"FromReroute|"+CarIDString)
+
+                MainEntityList[CarIDString,table] = table("type" = Type,"ents" = CarData["ents",array],"step" = 2)
+                
+            }
+            
+        }
+        
+    }
+    
+    function array rollerAdder(Roller1:array,Roller2:array,Multiplier,AddString:string){
+        
+        local Roller3 = Roller1:clone()
+        
+        #example:
+        #array(6,1,"optionone",5,"optionalt")
+        
+        for(X = 1,(Roller2:count()-1)/2){
+            
+            Roller3:pushNumber(Roller2[X*2,number]*Multiplier +  Roller1[1,number])
+            Roller3:pushString(Roller2[X*2+1,string]+AddString)
+            
+        }
+        
+        Roller3[1,number] = Roller1[1,number] + Roller2[1,number]*Multiplier
+        
+        return Roller3
+        
+    }    
+    
+    function createSpawnCommand(Count,Spawns:array,SelectedJobs:array,Depth){
+        
+        CommandStack:pushTable(table("command" = "create train","count" = Count,"spawns" = Spawns,"selectedjobs" = SelectedJobs,"depth" = Depth))
+        
+    }
+    
+    #allows it to communicate with the carspawner with datasignals
+    dsJoinGroup("operations")
+    
+    CommandStack = table(table("command" = "first","stage" = "starting"))
+    printM("Began preprocessing.")
+    StartTime = systime()
+    
+    timer("CommandStack",1000)
+    timer("check timers",1000)
+    timer("check deleted",2*60*1000)
+    timer("reclarify",5000)
+    timer("spawn inbound",1000*60*15)
+    timer("scan cars",3000)
+    timer("scan hold",10000)
+    
+    
+    
+    TracksToProcess = Tracks:keys()
+    LocsToMark = WorldMarks:keys()
+    
+    Version = "v1.455"
+    
+    Message = "E2 is configured incorrectly! Version compatibility is incorrect, or the config is missing."
+    if(ConfigLoaded != Version){printM(Message),error(Message)}
+    
+    Segments["0",table] = table("job" = "CAR FAILED TO ROUTE","color" = vec(255,0,255))
+
+    entity():setName("Operations "+ConfigName+": "+Version)
+    
+    runOnChat(1)
+    
+    findInSphere(entity():pos(),1024)
+    findClipToClass("gmod_wire_expression2")
+    local E2s = findToArray()
+    
+    for(X = 1,E2s:count()){
+        
+        if(E2s[X,entity]:getName():find("OPS Score e2")){
+            
+            Wirelink = E2s[X,entity]
+            
+        }
+        
+    }
+    
+    if(Wirelink != noentity()){
+        
+        entity():createWire(Wirelink,"Response","Response")
+        
+    }
+
+
+}
+
+if(dupefinished()){reset()}
+
+if(dsClk("markthis")){ ##MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER####MARKER##
+    
+    local CarspawnerDataRecieved = dsGetTable()
+    
+    local FrameID = CarspawnerDataRecieved[1,array][1,number]
+    
+    MainEntityList[FrameID:toString(),table] = MainEntityList[CarspawnerDataRecieved[2,string],table]:clone() 
+    MainEntityList[FrameID:toString(),table]["ents",array] = CarspawnerDataRecieved[1,array]
+    MainEntityList[FrameID:toString(),table]["starttime",number] = systime()
+    
+    if(!CarsCreatedByCommand[MainEntityList[FrameID:toString(),table]["uniquecommandid",string],array]:count()){CarsCreatedByCommand[MainEntityList[FrameID:toString(),table]["uniquecommandid",string],array] = array()}
+    CarsCreatedByCommand[MainEntityList[FrameID:toString(),table]["uniquecommandid",string],array]:pushNumber(FrameID)
+    
+    local Route = MainEntityList[FrameID:toString(),table]["route",array]
+
+    markcar(entity(FrameID),Route,2,MainEntityList[FrameID:toString(),table]["please hold",number])  
+
+    send(table("name" = "spawn","ent" = FrameID:toString()))
+
+}elseif(dsClk("donewith")){
+    
+    local CarspawnerDataRecieved = dsGetString()
+    
+    local UniqueIDBack = CarspawnerDataRecieved:toNumber()
+    
+    for(Y = clamp(UniqueIDBack-5,1,inf()),UniqueIDBack){
+        
+        local CardsToRemove = CardsCreatedByCommand[Y:toString(),array]
+    
+        for(X = 1,CardsToRemove:count()){
+
+            MainEntityList:remove(CardsToRemove[X,string])
+            
+        }
+        
+    }
+      
+    local CarsToEnable = CarsCreatedByCommand[CarspawnerDataRecieved,array]
+
+    for(X = 1,CarsToEnable:count()){
+
+        MainEntityList[CarsToEnable[X,number]:toString(),table]:remove("NotTracking")
+        
+    }
+       
+}
+
+if(chatClk(owner())){ #Text parser
+    
+    local LSC = owner():lastSaid():lower():trim() 
+    local LSCE = LSC:explode(" ")
+    
+    if(LSCE[1,string] == ".data"){
+        
+        printTable(MainEntityList[owner():aimEntity():id():toString(),table])         
+        
+        hideChat(1)
+
+    }elseif(LSCE[1,string] == ".train"){
+        
+        local InputCount = LSCE[3,string]:toNumber()
+        local Instructions = TrainPresets[LSCE[2,string],table]["data",table]
+            
+        if(Instructions:count() == 0){
+        
+            printM("Unknown preset \""+LSCE[2,string]+"\"")
+            
+        }else{
+            
+            AutomaticSpawnsEnabled = 1
+            
+            if(InputCount != 0){
+                OverallCount = InputCount 
+            }else{
+                OverallCount = ceil(TrainPresets[LSCE[2,string],table]["length",number]*random(1-InboundVariance,1))
+            }
+    
+            for(X = 1,Instructions:count()){
+                
+                local CurrentInstruction = Instructions[X,table]
+            
+                local Spawns = CurrentInstruction["spawns",array]
+                local SelectedJobs = CurrentInstruction["jobs",array]
+                local Depth = CurrentInstruction["depth",number]
+                
+                local Count = ceil(OverallCount*CurrentInstruction["share",number])
+                
+                createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
+      
+            }
+            
+        }   
+            
+        hideChat(1)
+        
+    }elseif(LSCE[1,string] == ".trains"){
+    
+        local Keys = TrainPresets:keys()
+        
+        hideChat(1)
+        
+        if(LSCE[2,string] == "spawn"){
+            
+            local Spawncount = LSCE[3,string]:toNumber()
+            local Todo = array()
+            
+            if(Spawncount != 0){
+                
+                for(X = 1,Spawncount){
+                    
+                    Todo:pushString(Keys[randint(1,Keys:count()),string])
+                    
+                }
+                
+            }else{
+                
+                Todo = Keys
+                
+            }
+        
+            for(Y = 1,Todo:count()){
+
+                Instructions = TrainPresets[Todo[Y,string],table]["data",table]
+                
+                for(X = 1,Instructions:count()){
+                    
+                    local CurrentInstruction = Instructions[X,table]
+                
+                    local Spawns = CurrentInstruction["spawns",array]
+                    local SelectedJobs = CurrentInstruction["jobs",array]
+                    local Depth = CurrentInstruction["depth",number]
+                    
+                    local Count = ceil(TrainPresets[Todo[Y,string],table]["length",number]*CurrentInstruction["share",number]*random(1-InboundVariance,1))
+                    
+                    createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
+          
+                }
+                
+            }
+            
+            
+        }else{
+            
+            for(Y = 1,Keys:count()){
+                
+                Z = 1
+                
+                while(Keys[Y,string] > ToPrintTrains[Z,string] & Z <= ToPrintTrains:count()){
+                    
+                    Z++
+                    
+                }
+                
+                ToPrintTrains:insertString(Z,Keys[Y,string])
+                
+            }
+            
+        }   
+        
+    }elseif(LSCE[1,string] == ".cars"){
+        
+        local Count = LSCE[2,string]:toNumber()
+        local Spawns = LSCE[4,string]:explode("|")
+        local SelectedJobs = LSCE[5,string]:explode("|")
+        local Depth = LSCE[3,string]:toNumber()
+        
+        createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
+        
+        hideChat(1)
+        
+    }elseif(LSCE[1,string] == ".bonk"){
+        
+        local PlayerAimEntity = owner():aimEntity()
+        
+        hideChat(1)
+        
+        local CarData = MainEntityList[PlayerAimEntity:id():toString(),table]
+        
+        if(PlayerAimEntity:isValid() & CarData:count()){
+            
+            printM("Kicked the car to the next stage")
+            
+            CarData["hold",number] = 0
+            
+            startEntityIDTimer(PlayerAimEntity:id():toString(),0)
+            
+        }
+        
+    }elseif(LSCE[1,string] == ".reworldmark"){
+        
+        hideChat(1)
+        printM("Removed "+WorldMarkEnts:count()+" markers and remade them.")
+        
+        while(WorldMarkEnts:count()){
+            
+            WorldMarkEnts[1,entity]:propDelete()
+            WorldMarkEnts:remove(1)
+            
+        }
+        
+        LocsToMark = WorldMarks:keys()
+        
+    }elseif(LSCE[1,string] == ".era"){
+        
+        if(LSCE[2,string] == ""){
+            
+            printM("Era is currently \""+Era+"\"")
+            
+        }else{
+            
+            Era = LSCE[2,string]
+            printM("Set era to "+Era)
+            
+        }
+        
+        hideChat(1)
+        
+    }elseif(LSCE[1,string] == ".reservations"){
+        
+        if(LSCE[2,string] != "delete"){
+            
+            printTable(TrackReservations)
+            print(SortedTimers)
+            print(systime())
+            
+        }else{
+            
+            TrackReservations = table()
+            printM("Nuked track reservations.")
+            
+        }
+        
+        hideChat(1)
+        
+    }elseif(LSCE[1,string] == ".inbound"){
+        
+        AutomaticSpawnsEnabled = 1
+        stoptimer("spawn inbound")
+        timer("spawn inbound",1000)
+        hideChat(1)
+        
+        
+    }elseif(LSCE[1,string] == ".target"){
+        
+        if(LSCE[2,string]:toNumber() <= 0){
+            
+            printM("Target Carcount is currently "+TargetCarcount)
+            
+        }else{
+        
+            TargetCarcount = LSCE[2,string]:toNumber()
+            printM("Target Carcount set to "+TargetCarcount)
+            
+        }
+        
+        hideChat(1)
+        
+    }elseif(LSCE[1,string] == ".ohboyherewego" & owner():aimEntity() == entity()){
+        
+        printM("Locked and loaded, initiating switch-over.")
+        
+        hideChat(1)
+        
+        MainEntityList = Reload:clone()
+        TimersToRecheck = MainEntityList:keys()
+        Inc = IncRel
+
+    }elseif(LSCE[1,string] == ".reloadtimers"){
+        
+        printM("Reloading all timers.")
+        
+        hideChat(1)
+
+        TimersToRecheck = MainEntityList:keys()
+
+    }elseif(LSCE[1,string] == ".deletus"){
+        
+        hideChat(1)
+        printM("Deleted the OPS e2.")
+        selfDestruct()
+
+    }
+    
+}
+
+if(chatClk()){
+    
+    if(lastSaid() == ".clarify"){
+        
+        local PlayerAimEntity = lastSpoke():aimEntity()
+        local T2 = MainEntityList[PlayerAimEntity:id():toString(),table]
+        
+        if(PlayerAimEntity:isValid() & T2:count()){
+            
+            printM(lastSpoke():name()+" reapplied "+PlayerAimEntity:id()+"'s car marker.")
+            markcar(PlayerAimEntity,T2["route",array],T2["step",number],0)
+            
+        }
+        
+    }
+    
+}
+
+if(clk("reclarify")){
+    
+    local Keys = MainEntityList:keys()
+    local CarID = Keys[randint(1,Keys:count()),string]
+    local Base = entity(CarID:toNumber())
+    local T2 = MainEntityList[CarID,table]
+
+    if(Base:isValidPhysics()){
+        
+        markcar(Base,T2["route",array],T2["step",number],0)
+        
+    }
+    
+    timer("reclarify",500)
+    
+}
+
+
+if(clk("spawn inbound")){
+    
+    timer("spawn inbound",5*60*1000)
+    
+    if(TargetCarcount > CurrentCarcount & AutomaticSpawnsEnabled){
+        
+        printM("Queued inbound train.")
+        
+        local Try = PrevInbound
+        while(Try == PrevInbound){
+            Try = rollW(InboundTrains,"")
+        }
+        
+        PrevInbound = Try
+        
+        local Instructions = TrainPresets[Try,table]["data",table]
+        
+        for(X = 1,Instructions:count()){
+            
+            local CurrentInstruction = Instructions[X,table]
+        
+            local Spawns = CurrentInstruction["spawns",array]
+            local SelectedJobs = CurrentInstruction["jobs",array]
+            local Depth = CurrentInstruction["depth",number]
+            
+            local Count = ceil(TrainPresets[Try,table]["length",number]*CurrentInstruction["share",number]*random(1-InboundVariance,1))
+            
+            createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
+  
+        }
+        
+    }
+    
+}
+
+if(clk("scan cars")){ 
+    
+    timer("scan cars",5000)
+    
+    if(!CarsToScan:count()){
+        CarsToScan = MainEntityList:keys()
+        CurrentCarcount = StoredCarcount
+        StoredCarcount = 0
+    }
+    
+}elseif(clk("check timers")){
+    
+    timer("check timers",2000)
+    
+    while(SortedTimers[2,number] != 0 & (SortedTimers[2,number] < systime()) & safe()){
+        
+        local TimerData = SortedTimers[1,string]:explode("|")
+        local TimerType = TimerData[1,string]
+
+        if(TimerType == "CarID"){
+        
+            local CarIDString = TimerData[2,string]
+            local CarTable = MainEntityList[CarIDString,table]
+            
+            MainEntityList[CarIDString,table]["timer end",number] = 0
+            
+            if(CarTable:count() > 0){ #if car data is Valid:
+                
+                local CurrentLoc = CarTable["route",array][CarTable["step",number],string]:explode("|")[2,string]
+                
+                reclassifyCar(CarIDString)
+                
+            }
+            
+        }elseif(TimerType == "UnreserveTrack"){
+            
+            TrackReservations[TimerData[2,string],number] = 0
+            
+        }
+        
+        SortedTimers:remove(1)
+        SortedTimers:remove(1)
+        
+    }
+    
+}elseif(clk("scan hold")){
+    
+    if(!CarsToHold:count() & HoldState == ""){
+        
+        CarsToHold = MainEntityList:keys()
+        SegmentsActive = JobsStored:clone()
+        JobsStored = table()
+        HoldState = "start"
+        CarsAvailable = table()
+        CarsReady = table()
+        
+    }
+    
+    timer("scan hold",10000)
+    
+}elseif(clk("check deleted")){
+    
+    CheckDeletions = MainEntityList:keys()
+    
+    timer("check deleted",0.1*60*1000)
+    
+}
+
+if(ToSendOut:count() & minquota() > 5000 & (systime() > WaitToRefire)){
+    
+    findInSphere(entity():pos(),1000000)
+    findClipToClass("gmod_wire_expression2")
+    findClipToPlayerProps(owner())
+    
+    local R = findToArray()
+    
+    local Flag = 0
+    
+    for(X = 1,R:count()){
+        
+        if(R[X,entity]:getName():find("Carspawner")){
+            
+            Flag = 1
+            
+        }
+        
+    }
+    
+    if(Flag){
+        
+        dsSend("populate","operations",ToSendOut[1,table])
+        ToSendOut:remove(1)
+        
+    }else{
+        
+        WaitToRefire = systime()+5
+        
+    }
+    
+}
+
+if(clk("CommandStack")){
+
+    timer("CommandStack",50)
+
+    while(CommandStack:count() & safe()){
+        
+        if(CommandStack[1,table]["command",string] == "create cars" & safe()){
+            
+            if(CommandStack[1,table]["step",string] == "startup" & safe()){
+                
+                IncrX = 1
+                CarsRoller = array(0)
+                CommandStack[1,table]["step",string] = "roller"
+                
+            }
+            
+            if(CommandStack[1,table]["step",string] == "roller" & safe()){
+
+                while(IncrX <= CommandStack[1,table]["loc",array]:count() & safe()){
+                    
+                    local CurrentLoc = CommandStack[1,table]["loc",array][IncrX,string]
+                    local TrafficLoc = Tracks[CurrentLoc,table]["part of",string] != "" ? Tracks[CurrentLoc,table]["part of",string] : CurrentLoc
+                    
+                    local Base = 1
+                    
+                    if(Tracks[CurrentLoc,table]["length",number] != 0 & Tracks[CurrentLoc,table]["part of",string] != ""){
+                        
+                        Base = Tracks[CurrentLoc,table]["length",number] / Tracks[Tracks[CurrentLoc,table]["part of",string],table]["total length",number]
+                        
+                    }
+                
+                    if(CommandStack[1,table]["jobs",array][1,string] == "all"){
+                        
+                        local Traffic = Tracks[TrafficLoc,table]["traffic",table]
+                        local TrafficKeys = Traffic:keys()
+                        
+                        for(X = 1,TrafficKeys:count()){
+                            
+                            CarsRoller = rollerAdder(CarsRoller,Traffic[TrafficKeys[X,string],array],Base,"|"+CurrentLoc)
+                            
+                        }
+                        
+                    }else{
+
+                        TrafficKeys = CommandStack[1,table]["jobs",array]
+                        
+                        for(X = 1,TrafficKeys:count()){
+                        
+                            CarsRoller = rollerAdder(CarsRoller,Tracks[TrafficLoc,table]["traffic",table][TrafficKeys[X,string],array],Base,"|"+CurrentLoc)
+                            
+                        }
+                        
+                    }
+                    
+                    IncrX++
+                    
+                }
+                
+                if(IncrX > CommandStack[1,table]["loc",array]:count()){
+                    
+                    if(CarsRoller:count() > 1){
+                    
+                        CommandStack[1,table]["step",string] = "complete"
+                        CommandStack[1,table]["step2",string] = "first"
+                        
+                    }else{
+                        
+                        printTable(CommandStack[1,table])
+                        CommandStack:remove(1)
+                        printM("Cars process found nothing")
+                        
+                    }
+                    
+                    IncrX = 1
+                    IncrY = 1
+                    Adder = table()
+                    OverallSpawned = 0
+                    
+                }
+                
+            }
+                        
+            if(CommandStack[1,table]["step",string] == "complete" & safe()){
+            
+                while(CommandStack[1,table]["count",number] & safe() & perf()){
+                    
+                    if(CommandStack[1,table]["step2",string] == "first" & minquota() > 3000){
+                        
+                        local S = rollW(CarsRoller,"")
+                        ToSpawnData = S:explode("|")
+                        CommandStack[1,table]["step2",string] = "gotroute"
+                        
+                        local GoTo = ToSpawnData[3,string]
+                        local Loc = ToSpawnData[4,string]
+                        
+                        callRoute(Loc,GoTo,"FromSpawning")
+                        
+                    }
+                        
+                    if(CommandStack[1,table]["step2",string] == "gotroute" & safe()){
+                        
+                        local Type = ToSpawnData[2,string]
+                        local GoTo = ToSpawnData[3,string]
+                        local Loc = ToSpawnData[4,string]
+                    
+                        local Route = RouteReturn              
+                            
+                        #mechanism that generates an "Index" for each track, allowing sorting  
+                        local Index = Loc
+    
+                        for(X = 1,clamp(Route:count(),0,CommandStack[1,table]["sortdepth",number])){
+                            
+                            Index = Index + Route[X,string]
+                            
+                        }
+
+                        
+                        if(!Adder[Loc,table]:count()){
+                            
+                            Adder[Loc,table] = table()
+                            
+                        }
+                        
+                        SavedSpawnData = table(Loc,Index,Route,Type)
+                        
+                        CommandStack[1,table]["step2",string] = "second"
+                        
+                    }
+                    
+                    if(CommandStack[1,table]["step2",string] == "second" & safe()){
+                        
+                        local Loc = SavedSpawnData[1,string]
+                        local Index = SavedSpawnData[2,string]
+                        local Route = SavedSpawnData[3,array]
+                        local Type = SavedSpawnData[4,string]  
+                        
+                        #Sector4 = maxquota():toString()+" "+systime()+" "+safe()
+                    
+                        while(IncrY <= Adder[Loc,table]:count()+1 & safe()){
+                            
+                            if(Index >= Adder[Loc,table][IncrY,array][4,string]){
+                            
+                                local TempID = "ph"+PlaceholderID
+                                local UniqueID = CommandStack[1,table]["unique",string]
+                                
+                                MainEntityList[TempID,table] = table("type" = Type,"route" = Route,"NotTracking" = 1,"uniquecommandid" = UniqueID,"step" = 2,"please hold" = CommandStack[1,table]["sortdepth",number] == 0)
+                                
+                                
+                                if(!CardsCreatedByCommand[UniqueID,array]:count()){CardsCreatedByCommand[UniqueID,array] = array(TempID)}else{CardsCreatedByCommand[UniqueID,array]:pushString(TempID)}
+                                PlaceholderID++
+                                
+                                local CarspawnerCompatibleType = (Type:explode("-")[1,string] +" "+ ((Type:find("empty") != 0) ? "empty" : "loaded"))
+                                
+                                Adder[Loc,table]:insertArray(IncrY,array(".sp 0 "+Era+" "+CarspawnerCompatibleType,vec(1,0,0),TempID,Index))
+                                
+                                IncrY = Adder[Loc,table]:count()+1
+                                
+                            }
+                            
+                            IncrY++
+                             
+                        }
+                        
+                        #Sector5 = maxquota():toString()+" "+systime()+" "+safe()
+                        
+                        if(IncrY >= Adder[Loc,table]:count()+1){ 
+                            
+                            IncrY = 1
+                            CommandStack[1,table]["count",number] = CommandStack[1,table]["count",number] - 1
+                            OverallSpawned++
+                            CommandStack[1,table]["step2",string] = "first"
+                            
+                            #Sector6 = maxquota():toString()+" "+systime()+" "+safe()
+                            
+                        }
+                        
+                    }
+                    
+                }
+                
+                #Sector7 = maxquota():toString()+" "+systime()+" "+safe()
+            
+                if(!CommandStack[1,table]["count",number] & CommandStack[1,table]["step",string] == "complete"){
+                    
+                    CommandStack[1,table]["step",string] = "finalize"
+                    IncrX = 1
+                    IncrY = 1
+                    TracksKeys = Adder:keys()
+                    CarspawnerCommandStack = table()
+                    TT = 1
+                    
+                }
+                
+            }
+            
+            #Sector8 = maxquota():toString()+" "+systime()+" "+safe()
+            
+            if(CommandStack[1,table]["step",string] == "finalize" & safe()){
+                
+                while(IncrX <= TracksKeys:count() & safe()){
+                    
+                    local TrackData = Tracks[TracksKeys[IncrX,string],table]
+                    
+                    CarspawnerCommandStack[(TT):toString(),array] = array("summon",TrackData["spawnpos",vector]+vec(0,0,20),TrackData["spawnang",number])
+                    TT++
+                    
+
+                    
+                    local Reservation = TrackData["spawn exclusion",string]
+                    if(Reservation != ""){TrackReservations[Reservation,number] = 1,startTimer("UnreserveTrack|"+Reservation,systime()+(3*60))}
+                    
+                    
+                    local Loc = TracksKeys[IncrX,string]
+                    
+                    for(X = 1,Adder[Loc,table]:count()){
+                        #[
+                        local PrevCar = CarspawnerCommandStack[(TT-1):toString(),array]
+                        #currently all cars need a unique carspawner command to correctly send the pre-tag information; so this is botched for now
+                        if(Adder[Loc,table][X,array][4,string] == PrevCar[4,string] & PrevCar[4,string] != "" & Adder[Loc,table][X,array][1,string] == PrevCar[1,string]){
+                            
+                            CarspawnerCommandStack[(TT-1):toString(),array][3,vector] = PrevCar[3,vector] + Adder[Loc,table][X,array][3,vector]
+                            
+                        }else{]#
+                        
+                        CarspawnerCommandStack[(TT):toString(),array] = Adder[Loc,table][X,array]
+                        TT++
+                            
+                        #}
+                        
+                    }
+                    
+                    IncrX++
+                    
+                }
+                
+                if(IncrX > TracksKeys:count()){
+                
+                    CarspawnerCommandStack[(TT):toString(),array] = array("summon",vec(0),0)
+                    TT++
+                    CarspawnerCommandStack[(TT):toString(),string] = CommandStack[1,table]["unique",string]
+                    
+                    send(table("name" = "train","unique" = CommandStack[1,table]["unique",string]))
+                    
+                    ToSendOut:pushTable(CarspawnerCommandStack)
+                
+                    printM("spawned "+OverallSpawned+" cars at "+toString(TracksKeys))
+                    OverallSpawned = 0
+                    IncrX = 1
+                    
+                    CommandStack:remove(1)
+                    
+                }
+                
+                
+            }
+
+        }elseif(CommandStack[1,table]["command",string] == "first" & safe()){
+            
+            if(CommandStack[1,table]["stage",string] == "starting" & safe()){
+            
+                CommandStack[1,table]["stage",string] = "segmentbase"
+                
+                InboundTrains = array(0)
+                
+                local Keys = TrainPresets:keys()
+                
+                for(X = 1,TrainPresets:count()){
+                    
+                    local Auto = TrainPresets[Keys[X,string],table]["automatic",number]
+                    
+                    if(Auto > 0){
+                        
+                        InboundTrains[1,number] = InboundTrains[1,number] + Auto
+                        InboundTrains:pushNumber(InboundTrains[1,number])
+                        InboundTrains:pushString(Keys[X,string])
+                        
+                    }
+                    
+                }
+                
+                CommandStack[1,table]["segmentstoeval",array] = Segments:keys()
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "segmentbase" & safe()){
+                
+                while(CommandStack[1,table]["segmentstoeval",array]:count() & safe()){
+                    
+                    local Segment = CommandStack[1,table]["segmentstoeval",array][1,string]
+                    CommandStack[1,table]["segmentstoeval",array]:remove(1)
+                    local Points = Segments[Segment,table]["routing",table]
+                    
+                    if(Segments[Segment,table]["color",vector] != vec(0)){
+                        
+                        Segments[Segment,table]["color",vector] = clamp(Segments[Segment,table]["color",vector],vec(0),vec(255))
+                        
+                    }
+                    
+                    for(Y = 1,Points:count()-1){
+                        
+                        for(XY = 1,Points[Y,array]:count()){
+                        
+                            local Loc = Points[Y,array][XY,string]
+                            
+                            if(Routes[Loc,array]:count() == 0){
+                                Routes[Loc,array] = array()
+                            }
+                            
+                            for(Z = Y,Points:count()-1){
+                                
+                                local P2 = Points[Z+1,array]
+                                
+                                for(XX = 1,P2:count()){
+                                
+                                    if(Loc != P2[XX,string]){
+                                        
+                                         Routes[Loc,array]:pushString(Segment+"|"+P2[XX,string]+"|road")
+                                        
+                                    }
+                                    
+                                }
+                        
+                            }
+                            
+                        }
+                        
+                    }
+                    
+                }
+                
+                if(CommandStack[1,table]["segmentstoeval",array]:count() == 0){
+                    
+                    CommandStack[1,table]["stage",string] = "routebase"
+                    
+                }
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "routebase" & safe()){
+                
+                #pull out types from Tracks and use them to lay the foundation for the router
+        
+                while(TracksToProcess:count() & safe()){
+                    
+                    local TrackName = TracksToProcess[1,string]
+                    local TrackData = Tracks[TrackName,table]
+                    
+                    if(TrackData["color",vector] != vec(0)){
+                        
+                        TrackData["color",vector] = clamp(TrackData["color",vector],vec(0),vec(255))
+                        
+                    }
+                    
+                    if(TrackData["work",array]:count() & TrackData["time",number] == 0){
+                        
+                        TrackData["time",number] = IndTurn
+                        
+                    }
+                    
+                    if(TrackData["work",array]:count() % 4 != 0){error(TrackName+"'s work isn't set up correctly!")}
+                
+                    if(!Routes[TrackName,array]:count() & TrackData["part of",string] == ""){
+                        
+                        TrackData["badspawn",number] = 1
+                        
+                    }
+                    
+                    TrackData["pretraffic",table] = table()
+                    TrackData["reload",table] = table()
+                    
+                    local WorkData = TrackData["work",array]
+                    
+                    for(Y = 1,WorkData:count()/4){
+                        
+                        local CarType = WorkData[Y*4-2,string]+"-"+WorkData[Y*4-1,string]
+                        
+                        LocalDestinationsBTR[CarType,array] = array(0)
+                        LocalSourcesBTR[CarType,array] = array(0)
+                        LocalDestinationsBTR[WorkData[Y*4-2,string]+"-"+WorkData[Y*4,string],array] = array(0)
+                        LocalSourcesBTR[WorkData[Y*4-2,string]+"-"+WorkData[Y*4,string],array] = array(0)
+                        
+                        if(!TrackData["reload",table][CarType,array]:count()){
+                            
+                            TrackData["reload",table][CarType,array] = array(0)
+                            
+                        }
+                        
+                        TrackData["reload",table][CarType,array][1,number] = TrackData["reload",table][CarType,array][1,number] + WorkData[Y*4-3,number]
+                        TrackData["reload",table][CarType,array]:pushNumber(TrackData["reload",table][CarType,array][1,number])
+                        TrackData["reload",table][CarType,array]:pushString(WorkData[Y*4-2,string]+"-"+WorkData[Y*4,string])
+                        
+                    }
+                    
+                    if(WorkData:count() & TrackData["delete",number] != 1 & TrackData["not a destination",number] != 1){
+                        
+                        if(!SpawningGroups["allind",array]:count()){
+                            
+                            SpawningGroups["allind",array] = array()
+                            
+                        }
+                        
+                        SpawningGroups["allind",array]:pushString(TrackName)
+                        
+                    }
+                    
+                    local PartOf = TrackData["part of",string]
+                    
+                    if(PartOf != ""){
+                        
+                        Tracks[PartOf,table]["total length",number] = Tracks[PartOf,table]["total length",number] + TrackData["length",number]
+                    
+                        if(!SpawningGroups[PartOf,array]:count()){
+                            
+                            SpawningGroups[PartOf,array] = array()
+                            
+                        }
+                        
+                        SpawningGroups[PartOf,array]:pushString(TrackName)
+                        
+                    }
+                    
+                    local LocGroup = TrackData["locgroup",string]
+                    
+                    if(LocGroup != ""){
+                    
+                        if(!SpawningGroups[LocGroup,array]:count()){
+                            
+                            SpawningGroups[LocGroup,array] = array()
+                            
+                        }
+                        
+                        SpawningGroups[LocGroup,array]:pushString(TrackName)
+                        
+                    }
+                    
+                    if(Tracks[TrackName,table]["shareall",number] > 0){
+                        
+                        ShareAllRoller[1,number] = ShareAllRoller[1,number] + TrackData["shareall",number]
+                        ShareAllRoller = ShareAllRoller:add(array(ShareAllRoller[1,number],TrackName))
+                        
+                    }
+                    
+                    if(TrackData["inbound",number] > 0){
+    
+                        InboundTracksRoller[1,number] = InboundTracksRoller[1,number] + TrackData["inbound",number]
+                        InboundTracksRoller = InboundTracksRoller:add(array(InboundTracksRoller[1,number],TrackName))
+                        
+                    }
+                    
+                    if(TrackData["outbound",number] > 0){
+                        
+                        OutboundTracksRoller[1,number] = OutboundTracksRoller[1,number] + TrackData["outbound",number]
+                        OutboundTracksRoller = OutboundTracksRoller:add(array(OutboundTracksRoller[1,number],TrackName))
+                        
+                    }
+                    
+                    TracksToProcess:remove(1)
+                    
+                }
+                
+                if(!TracksToProcess:count()){
+                
+                    CarTypesList = LocalDestinationsBTR:keys()
+                    
+                    TracksKeys = Tracks:keys()
+                    
+                    #vars for test train spawn (see below)
+                    CarspawnerCommandStack = table()
+                    TT = 1
+                    
+                    CommandStack[1,table]["stage",string] = "tracks"
+                    Xt = 1
+                    
+                }
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "tracks" & safe()){
+                
+                while(Xt <= TracksKeys:count() & holoCanCreate() & safe()){
+                    
+                    Index = TracksKeys[Xt,string]
+                    local Tl = Tracks[Index,table]
+                    
+                    local P = Tl["boxhi",vector]
+                    local N = Tl["boxlo",vector]
+                    local R = Tl["boxrot",number]
+                    
+                    if(P:x() < N:x() | P:y() < N:y() | P:z() < N:z()){
+                        
+                        print("A component of "+Index+"'s boxsize isn't set up correctly! > "+(P:x() < N:x())+ " "+(P:y() < N:y())+ " "+(P:z() < N:z()))
+                        error("A component of "+Index+"'s boxsize isn't set up correctly! > "+(P:x() < N:x())+ " "+(P:y() < N:y())+ " "+(P:z() < N:z()))
+                        
+                    }
+                    
+                    local C = ((P+N)*0.5)
+                
+                    local C2 = C:rotateAroundAxis(vec(0,0,1),R)
+                    
+                    Tl["boxhi",vector] = C2+(P-C)
+                    Tl["boxlo",vector] = C2-(P-C)
+                    
+                    local Sc = newabs((1/2048)*(Tl["boxlo",vector]-Tl["boxhi",vector]))
+                
+                    #[marks the trigger zones with boxes
+                    holoCreate(HID,C,Sc,ang(0,0,0):rotateAroundAxis(vec(0,0,1),-R),Tl["color",vector],"models/props_metaladon/parts/boundingbox.mdl")
+                    holoAlpha(HID,70)
+                    holoMaterial(HID,"debug/debugdrawflat")
+                    HID++
+                    #]#
+                    
+                    
+                    
+                    local WorkInfo = Tl["work",array]
+                    
+                    for(Y = 1,WorkInfo:count()/4){
+                        
+                        local Weight = WorkInfo[Y*4-3,number]
+                        #local CarType = WorkInfo[Y*4-2,string]
+                        #local Load = WorkInfo[Y*4-1,string]
+                        #local Reload = WorkInfo[Y*4,string]
+                        
+                        if(Tl["not a destination",number] == 0){
+                        
+                            local TrueType = WorkInfo[Y*4-2,string]+"-"+WorkInfo[Y*4-1,string]
+                            
+                            LocalDestinationsBTR[TrueType,array]:pushNumber(LocalDestinationsBTR[TrueType,array][1,number] + Weight)
+                            LocalDestinationsBTR[TrueType,array]:pushString(Index)
+                            LocalDestinationsBTR[TrueType,array][1,number] = LocalDestinationsBTR[TrueType,array][1,number] + Weight
+                            
+                        }
+                        
+                        if(!Tl["delete",number]){
+                            
+                            local TrueType = WorkInfo[Y*4-2,string]+"-"+WorkInfo[Y*4,string]
+                        
+                            LocalSourcesBTR[TrueType,array]:pushNumber(LocalSourcesBTR[TrueType,array][1,number] + Weight)
+                            LocalSourcesBTR[TrueType,array]:pushString(Index)
+                            LocalSourcesBTR[TrueType,array][1,number] = LocalSourcesBTR[TrueType,array][1,number] + Weight
+                            
+                        }
+                        
+                    }
+                    
+                    Xt++
+                    
+                    
+                }
+                
+                if(Xt > TracksKeys:count()){
+                    
+                    CommandStack[1,table]["stage",string] = "interchange1" 
+                    IncrX = 1
+
+                }
+
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "interchange1" & safe()){
+                
+                while(IncrX <= CarTypesList:count() & safe()){
+                    
+                    local CarType = CarTypesList[IncrX,string]
+                    
+                    TrafficRatiobyType[CarType,table] = table()
+                    FromTrafficRatiobyType[CarType,table] = table()
+                    
+                    local CarVolumeGap = LocalDestinationsBTR[CarType,array][1,number] - LocalSourcesBTR[CarType,array][1,number] 
+                    
+                    if(CarVolumeGap < 0){ #if there's more suppliers than takers
+                        
+                        
+                         
+                        local Base = -CarVolumeGap / OutboundTracksRoller[1,number]
+                        
+                        if(Base < 0){error("stanky negative bases")}
+                                                                                   
+                        AllDestinationsBTR[CarType,array] = rollerAdder(LocalDestinationsBTR[CarType,array],OutboundTracksRoller,Base,"")
+                        
+                        AllSourcesBTR[CarType,array] = LocalSourcesBTR[CarType,array]
+                        
+                    }else{
+                        
+                        if(CarVolumeGap != 0){
+                        
+                            local Base = CarVolumeGap / InboundTracksRoller[1,number]
+                                    
+                            AllSourcesBTR[CarType,array] = rollerAdder(LocalSourcesBTR[CarType,array],InboundTracksRoller,Base,"")
+                            
+                        }else{
+                            
+                            AllSourcesBTR[CarType,array] = LocalSourcesBTR[CarType,array]
+                            
+                        }
+        
+                        AllDestinationsBTR[CarType,array] = LocalDestinationsBTR[CarType,array]
+                        
+                        
+                    }
+                    
+                    local Base = AllDestinationsBTR[CarType,array][1,number] #doesn't matter which from,to,swap,not you take it from; they're all the same; as long as it's defined
+                    
+                    if(Base == 0){
+                        
+                        #there are cases where this can be 0 and still be good; gotta think of a better way of doing things
+                        
+                        #error(CarType+" I accidentally did a bad logic, this might be a major issue")
+                        
+                    }else{
+                    
+                        AllDestinationsBTR[CarType,array] = rollerAdder(AllDestinationsBTR[CarType,array],ShareAllRoller,Base,"")
+                        AllSourcesBTR[CarType,array] = rollerAdder(AllSourcesBTR[CarType,array],ShareAllRoller,Base,"")
+                        
+                    }
+                    
+                    IncrX++
+                    
+    
+                }
+                
+                if(IncrX > CarTypesList:count()){
+                
+                    TypeIncr = 1
+                    IncrX = 1
+                    IncrY = 1
+                    
+                    #[
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    printTable(AllSourcesBTR)
+                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                    printTable(AllDestinationsBTR)
+                    #]#
+                    
+                    CommandStack[1,table]["stage",string] = "interchange2"
+                    
+                }
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "interchange2" & safe()){
+                
+                while(IncrX <= CarTypesList:count() & safe()){
+                    
+                    local CarType = CarTypesList[IncrX,string]
+                
+                    local TotalTraffic = AllSourcesBTR[CarType,array][1,number]
+                    
+                    for(X = 1,(AllDestinationsBTR[CarType,array]:count()-1)/2){
+                        
+                        local Roller = AllDestinationsBTR[CarType,array]
+                        local Weight = Roller[X*2,number]-Roller[X*2-2,number]
+                        local Location = Roller[X*2+1,string]
+                    
+                        TrafficRatiobyType[CarType,table][Location,number] = Weight/TotalTraffic
+                        
+                    }
+                    
+                    for(X = 1,(AllSourcesBTR[CarType,array]:count()-1)/2){
+                        
+                        local Roller = AllSourcesBTR[CarType,array]
+                        local Weight = Roller[X*2,number]-Roller[X*2-2,number]
+                        local Location = Roller[X*2+1,string]
+                        
+                        FromTrafficRatiobyType[CarType,table][Location,number] = Weight
+                        
+                    }
+                    
+                    IncrX++
+                    
+                }
+                
+                if(IncrX > CarTypesList:count()){
+                    
+                    TypeIncr = 1
+                    IncrX = 1
+                    IncrY = 1
+                    
+                    CommandStack[1,table]["stage",string] = "traffic1"
+                    
+                }
+                
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "traffic1" & safe()){
+                
+                while(TypeIncr <= CarTypesList:count() & safe()){
+                    
+                    local CarType = CarTypesList[TypeIncr,string]
+                    
+                    local ToPos = AllDestinationsBTR[CarType,array]
+                    local FromPos = AllSourcesBTR[CarType,array]
+                    
+                    #print(CarType,ToPos,FromPos)
+                    
+                    while(IncrX <= (FromPos:count()-1)/2 & safe()){
+                        
+                        local From = FromPos[IncrX*2+1,string]
+                        
+                        if(!Tracks[From,table]["badspawn",number]){
+                        
+                            while(IncrY <= (ToPos:count()-1)/2 & safe()){
+                            
+                                local To = ToPos[IncrY*2+1,string]
+                            
+                                if(From != To & ((Tracks[From,table]["route exclusion",string] != Tracks[To,table]["route exclusion",string]) | Tracks[To,table]["route exclusion",string] == "")  & Tracks[From,table]["name",string] != Tracks[To,table]["name",string]){
+                                    
+                                    callRoute(From,To,"FromTraffic|"+CarType)
+                                    
+                                }
+                                
+                                IncrY++
+                                
+                            }
+                            
+                        }
+                        
+                        if(IncrY > (ToPos:count()-1)/2 | Tracks[From,table]["badspawn",number]){
+                            
+                            IncrY = 1
+                            IncrX++
+                            
+                        }
+    
+                        
+                    }
+                         
+                        
+                    if(IncrX > (FromPos:count()-1)/2){
+                        
+                        IncrX = 1
+                        TypeIncr++
+    
+                        
+                    }       
+                    
+                }
+                
+                if(TypeIncr > CarTypesList:count()){
+                    
+                    CloneForward = CommandStack[1,table]:clone()
+                    CloneForward["stage",string] = "traffic2"
+                    CommandStack:pushTable(CloneForward)
+                    CommandStack:remove(1)
+                    TypeIncr = 1
+                    IncrX = 1
+                    break
+                    
+                }
+                
+            }
+            
+            if(CommandStack[1,table]["stage",string] == "traffic2" & safe()){
+                
+                local TrackKeys = Tracks:keys()
+                
+                while(IncrX <= TrackKeys:count() & safe()){
+                    
+                    local Traffic = Tracks[TrackKeys[IncrX,string],table]["pretraffic",table]
+    
+                    Tracks[TrackKeys[IncrX,string],table]["traffic",table] = table()
+    
+                    local TrafficKeys = Traffic:keys()
+                    
+                    for(X = 1,TrafficKeys:count()){
+                        
+                        local Roller = array(0)
+                        
+                        local SegmentData = Traffic[TrafficKeys[X,string],table]
+                        local SegmentKeys = SegmentData:keys()
+                        
+                        for(Y = 1,SegmentKeys:count()){
+                        
+                            local Choice = SegmentKeys[Y,string]
+                            Roller[1,number] = Roller[1,number] + SegmentData[Choice,number]
+                            Roller:pushNumber(Roller[1,number])
+                            Roller:pushString(Choice)
+                            
+                        }
+                        
+                        Tracks[TrackKeys[IncrX,string],table]["traffic",table][TrafficKeys[X,string],array] = Roller
+                        
+                        Tracks[TrackKeys[IncrX,string],table]:remove("pretraffic")
+                    }
+                    
+                    
+                    
+                    
+                    
+                    IncrX++
+                    
+                }
+                
+                if(IncrX > TrackKeys:count()){
+                    
+                    CommandStack:remove(1) 
+                    printM("Completed main calculations in "+round(systime()-StartTime,2)+" seconds.")
+                    owner():soundPlay(1,100,"vo/Engineer_cheers03.mp3")
+                    
+                }
+                
+            }
+            
+        }elseif(CommandStack[1,table]["command",string] == "GenerateRoute" & safe()){
+            
+            local Start = CommandStack[1,table]["Loc",string]
+            local End = CommandStack[1,table]["GoTo",string]
+
+            if(RouteKey[Start+" "+End,array]:count()){
+                
+                RouteReturn = RouteKey[Start+" "+End,array]
+                CommandStack:remove(1)
+                Finished = 1
+                
+            }else{
+                
+                if(Tracks[Start,table]["part of",string] != ""){
+                    
+                    TrueStart = Tracks[Start,table]["part of",string]
+                    
+                }else{
+                    
+                    TrueStart = Start
+                    
+                }
+                
+                if(Tracks[End,table]["part of",string] != ""){
+                    
+                    TrueEnd = Tracks[End,table]["part of",string]
+                    
+                }else{
+                    
+                    TrueEnd = End
+                    
+                }
+                
+                if(TrueStart == TrueEnd){
+                    
+                    RouteReturn = array("0|"+TrueStart+"|0","loc|"+End+"|local")
+                    CommandStack:remove(1)
+                    Finished = 1
+                    
+                }else{
+                    
+                    if(CommandStack[1,table]["Seen",table]:count() == 0){
+                
+                        CommandStack[1,table]["Seen",table] = table()
+                        CommandStack[1,table]["Heap",table] = table(TrueStart)
+                        CommandStack[1,table]["Xplor",array] = array("0|"+TrueStart+"|0")
+
+                        Finished = 0
+                    }
+                    
+                    while(CommandStack[1,table]["Heap",table]:count() & !Finished & safe()){
+                        
+                        local ExaminingPath = CommandStack[1,table]["Xplor",array]
+                        local PathEnd = ExaminingPath[ExaminingPath:count(),string]
+                        local NewLocationsToExplore = Routes[PathEnd:explode("|")[2,string],array]
+                        
+                        for(X = 1,NewLocationsToExplore:count()){
+                            
+                            local New = NewLocationsToExplore[X,string]
+                            
+                            local NewPath = CommandStack[1,table]["Xplor",array]:clone()
+                            NewPath:pushString(New)
+                            
+                            local EndSegment = New:explode("|")
+                            local ThisLocation = EndSegment[2,string]
+                            
+                            if(ThisLocation == TrueEnd | ThisLocation == End){
+                                
+                                RouteKey[TrueStart+" "+TrueEnd,array] = NewPath
+                                
+                                if(ThisLocation != End){
+                        
+                                    EndSegment[3,string] = "final"
+                                    EndSegment[2,string] = End
+                                    NewPath:pushString(EndSegment[1,string]+"|"+EndSegment[2,string]+"|"+EndSegment[3,string])
+                                    
+                                }
+                                
+                                RouteReturn = NewPath
+                                CommandStack:remove(1)
+                                Finished = 1
+                                break
+                                
+                            }
+                            
+                            if(!CommandStack[1,table]["Seen",table][New,number] & !Finished){
+            
+                                if(Tracks[ThisLocation,table]["delete",number] == 0 & Tracks[ThisLocation,table]["not a destination",number] == 0 & Tracks[ThisLocation,table]["work",array]:count() == 0){
+                                
+                                    CommandStack[1,table]["Heap",table]:pushArray(NewPath)
+                                    
+                                }
+                                
+                                CommandStack[1,table]["Seen",table][New,number] = 1
+                                
+                            }
+                            
+                        }
+                        
+                        if(CommandStack[1,table]["Heap",table]:count() & !Finished){
+                            
+                            CommandStack[1,table]["Heap",table]:remove(1)
+                            CommandStack[1,table]["Xplor",array] = CommandStack[1,table]["Heap",table][1,array]
+                            
+                        }
+                        
+                    }
+                    
+                    if(!Finished & safe()){
+                    
+                        printM("No route found between "+Start+" and "+End+"!")
+                        CommandStack:remove(1)
+                        RouteReturn =  array("0|"+End+"|0")
+                        
+                    }
+                    
+                }
+                
+            }
+            
+        }elseif(CommandStack[1,table]["command",string] == "RemarkCar" & safe()){
+            
+            local CarIDString = CommandStack[1,table]["carid",string]
+            MainEntityList[CarIDString,table]["route",array] = RouteReturn
+            markcar(entity(CarIDString:toNumber()),RouteReturn,2,1)
+            CommandStack:remove(1)
+            
+        }elseif(CommandStack[1,table]["command",string] == "ReturnTrafficRoute"){
+            
+            local CarType = CommandStack[1,table]["CarType",string]
+            local From = CommandStack[1,table]["From",string]
+            local To = CommandStack[1,table]["To",string]
+            
+            if(RouteReturn:count() < 2){printM(CarType+" type "+From+" "+To+" failed!")}
+            
+            local StoredLoc = From
+            
+            for(X = 2,RouteReturn:count()){
+                
+                local Segment = RouteReturn[X,string]:explode("|")[1,string]
+                local TrackRoller = Tracks[StoredLoc,table]["pretraffic",table][Segment,table]
+                local SaveData = Segment+"|"+CarType+"|"+To
+                
+                if(!TrackRoller:count()){
+                    
+                    TrackRoller = table()
+                    Tracks[StoredLoc,table]["pretraffic",table][Segment,table] = TrackRoller
+                    
+                }
+                
+                TrackRoller[SaveData,number] = TrackRoller[SaveData,number] + TrafficRatiobyType[CarType,table][To,number] * FromTrafficRatiobyType[CarType,table][From,number] # multiplied by the weight of this car type overall
+                
+                StoredLoc = RouteReturn[X,string]:explode("|")[2,string]
+                
+            }
+            
+            CommandStack:remove(1)
+            
+        }elseif(CommandStack[1,table]["command",string] == "create train"){
+            
+            local Count = CommandStack[1,table]["count",number]
+            local Spawns = CommandStack[1,table]["spawns",array]
+            local SelectedJobs = CommandStack[1,table]["selectedjobs",array]
+            local Depth = CommandStack[1,table]["depth",number]
+        
+            local Spawns = Spawns:clone()
+            local LocationHash = table()
+            local AcceptableSpawns = array()
+            local TrueSpawns = array()
+            local Open = (Spawns[1,string] == "open")
+            
+            local Good = (Count != 0 & Spawns:count())
+            
+            if(SelectedJobs[1,string] == ""){SelectedJobs = array("all")}
+            
+            while(Spawns:count()){
+                
+                local Item = Spawns[1,string]
+                
+                if(LocationHash[Item,number] == 0){
+                    
+                    LocationHash[Item,number] = 1
+                    
+                    local TrackData = Tracks[Item,table]
+                    local Reservation = TrackData["spawn exclusion",string]
+                    local Reserved = (Reservation != "") ? TrackReservations[Reservation,number] : 0
+                    
+                    if(TrackData["spawnpos",vector] != vec(0) & !TrackData["badspawn",number] & !Reserved & (!Open | trackIsClear(Item)) & (!Open | !TrackData["work",array]:count())){
+                        
+                        AcceptableSpawns:pushString(Item)
+                        
+                    }
+                    
+                    foreach(Y,K:string = SpawningGroups[Item,array]){
+                        
+                        Spawns:pushString(K)
+                        
+                    }
+                    
+                }
+                
+                Spawns:remove(1)
+                
+            }
+            
+            if(Open){
+                
+                local ToCreateLength = Count*12*55
+            
+                for(X = 1,AcceptableSpawns:count()){
+                    
+                    local R = randint(1,AcceptableSpawns:count())
+                    local Entry = AcceptableSpawns[R,string]
+                    local TrackLength = Tracks[Entry,table]["length",number]
+                    local TrackLength = TrackLength != 0 ? TrackLength : 12*12*55
+                    
+                    ToCreateLength = ToCreateLength - TrackLength
+                    
+                    TrueSpawns:pushString(Entry)
+                    AcceptableSpawns:remove(R)
+                    
+                    
+                    if(ToCreateLength < 0){
+                        
+                        break
+                        
+                    }
+                    
+                }
+                
+            }else{
+                
+                TrueSpawns = AcceptableSpawns
+                
+            }
+    
+            if(Good & TrueSpawns:count() & SelectedJobs:count()){
+                
+                UniqueCommandID++
+                CommandStack[1,table] = table("command" = "create cars","count" = Count,"loc" = TrueSpawns,"sortdepth" = Depth,"step" = "startup","jobs" = SelectedJobs,"unique" = UniqueCommandID:toString())
+                
+            }else{
+                
+                Reason = ""
+                if(!Good){
+                    Reason = "Command entered incorrectly."
+                }elseif(!TrueSpawns:count()){
+                    Reason = "No valid spawns found."
+                }else{
+                    Reason = "No valid jobs found."
+                }
+                
+                printM("Invalid spawning data. Reason: "+Reason)
+                CommandStack:remove(1)
+                
+            }
+            
+        }
+        
+    }
+
+    while(safe() & CarsToScan:count()){
+        
+        if(CarsToScan[1,string]:toNumber() != 0 & MainEntityList[CarsToScan[1,string],table]["NotTracking",number] != 1){
+        
+            local CarTable = MainEntityList[CarsToScan[1,string],table]
+            
+            local Route = CarTable["route",array]
+            local RteStep = CarTable["step",number]
+            
+            StoredCarcount = StoredCarcount + 1
+            
+            if(CarTable["timer end",number] == 0 & CarTable["hold",number] == 0 & within(entity(CarTable["ents",array][1,number]):pos(),Route[RteStep,string]:explode("|")[2,string])){
+                
+                local CurrentRteStepData = Route[RteStep,string]:explode("|")
+                local IsGoingOffMap = Tracks[CurrentRteStepData[2,string],table]["delete",number] != 0
+                local NoMove = Segments[CurrentRteStepData[1,string],table]["nomove",number]
+                
+                startEntityIDTimer(CarsToScan[1,string],1)
+                send(table("name" = "reroute","ent" = CarsToScan[1,string],"where" = CarTable["route",array][RteStep,string]:explode("|")[2,string],"count" = ((Route:count()-RteStep)+1),"isoffmap" = IsGoingOffMap,"nomove" = NoMove))
+                if(IsGoingOffMap){MainEntityList[CarsToScan[1,string],table]["out",number] = 1}
+                
+            }
+            
+        }
+        
+        CarsToScan:remove(1)
+    
+    }
+    
+    while(safe() & CarsToHold:count() & HoldState == "start"){
+        
+        if(CarsToHold[1,string]:toNumber() != 0 & MainEntityList[CarsToHold[1,string],table]["NotTracking",number] != 1){
+        
+            local CarTable = MainEntityList[CarsToHold[1,string],table]
+            local Route = CarTable["route",array]
+            local CurrentJob = Route[CarTable["step",number],string]:explode("|")[1,string]
+            local CurrentLoc = CarTable["route",array][CarTable["step",number]-1,string]:explode("|")[2,string]
+            
+            if(CarTable["timer end",number] == 0){JobsStored[CurrentJob,number] = JobsStored[CurrentJob,number] + 1}
+            
+            local ZoneMax = Tracks[CurrentLoc,table]["zonemax",vector]
+            local ZoneMin = Tracks[CurrentLoc,table]["zonemin",vector]
+            
+            if(boxed(ZoneMax,ZoneMin,entity(CarTable["ents",array][1,number]):pos())){
+                
+                local TrainToGoOut = Segments[CurrentJob,table]["train",string]
+            
+                if(CarTable["hold",number]){
+                    
+                    local BlockMin = Segments[CurrentJob,table]["min",number]
+                    local BlockMax = Segments[CurrentJob,table]["max",number]
+                    local TrainMin = Trains[TrainToGoOut,table]["min",number]
+                    local TrainMax = Trains[TrainToGoOut,table]["max",number]
+                    
+                    ToEvaluate:pushTable(table(CarsToHold[1,string],BlockMin,BlockMax,TrainMin,TrainMax,CurrentLoc,CurrentJob))
+                    
+                }
+                
+                if(!CarsAvailable[CurrentLoc,table]:count()){
+                    CarsAvailable[CurrentLoc,table] = table()
+                }
+                
+                increment(CarsAvailable[CurrentLoc,table],CurrentJob,1)
+                if(TrainToGoOut != ""){increment(CarsAvailable[CurrentLoc,table],TrainToGoOut,1)}
+                
+                if(!CarTable["hold",number]){
+                    
+                    if(!CarsReady[CurrentLoc,table]:count()){
+                        CarsReady[CurrentLoc,table] = table()
+                    }
+                    
+                    increment(CarsReady[CurrentLoc,table],CurrentJob,1)
+                    if(TrainToGoOut != ""){increment(CarsReady[CurrentLoc,table],TrainToGoOut,1)}
+                    
+                }
+                
+            }elseif(CarTable["hold",number]){
+                
+                MainEntityList[CarsToHold[1,string],table]["hold",number] = 0
+                markcar(entity(CarsToHold[1,string]:toNumber()),Route,CarTable["step",number],0)
+                
+            }
+                
+        }
+        
+        CarsToHold:remove(1)
+        
+    }
+    
+    if(!CarsToHold:count() & HoldState == "start"){
+        
+        HoldState = "blocks"
+        BlockIncrX = 1
+        LocationKeys = CarsAvailable:keys()
+        BlocksOK = table()
+        
+    }
+    
+    while(ToPrintTrains:count() & playerCanPrint()){
+        
+        local Data = TrainPresets[ToPrintTrains[1,string],table]
+        printColor(clamp(Data["color",vector]*1.2,vec(30),vec(255)),ToPrintTrains[1,string]+" - "+Data["name",string]+": "+Data["desc",string])#+" (Default Length: "+Data["length",number]+")")
+        ToPrintTrains:remove(1)
+        
+    }
+    
+    while(HoldState == "blocks" & safe() & BlockIncrX <= CarsAvailable:count()){
+        
+        local CurrentLoc = LocationKeys[BlockIncrX,string]
+        local Blocks = CarsAvailable[CurrentLoc,table]
+        
+        for(Y = 1,Blocks:count()){
+            
+            local CurrentJob = Blocks:keys()[Y,string]
+        
+            local A = (Segments[CurrentJob,table]["min",number] == 0 | CarsAvailable[CurrentLoc,table][CurrentJob,number] >= Segments[CurrentJob,table]["min",number])
+            
+            if(!BlocksOK[CurrentLoc,table]:count()){
+                BlocksOK[CurrentLoc,table] = table()
+            }
+            
+            local Train = Segments[CurrentJob,table]["train",string]
+                
+            if(Train != ""){
+                
+                if(!BlocksOK[CurrentLoc,table][Train,table]:count()){
+                    BlocksOK[CurrentLoc,table][Train,table] = table()   
+                }
+                    
+                if(A){increment(BlocksOK[CurrentLoc,table][Train,table],"tilmin",CarsAvailable[CurrentLoc,table][CurrentJob,number])}
+                increment(BlocksOK[CurrentLoc,table][Train,table],"tilmax",CarsReady[CurrentLoc,table][CurrentJob,number])
+                
+                #here's why we need both. This cycle, the train needs to know 2 things: Do I have enough cars to meet the minimum, and how many cars do I have currently counting against the maximum?
+                #"tilmin" adds up all the cars that could be available AND are guarenteed to have enough to leave;
+                #"tilmax" adds up the currently marked cars, so when adding additional cars it knows how many the train already posesses and won't go over.
+                
+            }
+
+        }
+        
+        BlockIncrX++
+        
+    }
+    
+    if(HoldState == "blocks" & BlockIncrX > CarsAvailable:count()){
+        
+        HoldState = "process"
+        
+    }
+    
+    while(ToEvaluate:count() & HoldState == "process" & safe()){
+        
+        local CarToEval = ToEvaluate[1,table]
+        
+        #block minimum check (do I have enough to meet X)
+        #block maximum check (will this put me over y)
+        #train minimum check (do I have enough to meet X)
+        #train maximum check (will this put me over y)
+        #min-max check (does the number of cars in the train minus this specific block plus the minimum of this block equal more than the maximum of the train?)
+        
+        #need a 5th check for "do I have enough cars to satisfy the block AND train minimums for this block"
+        #meant to avoid a situation where a train "sends out" a block and 2 half-blocks; the full block sees it has "enough cars" for a train, and the half-blocks haven't met their minimums yet
+        
+        local Train = Segments[CarToEval[7,string],table]["train",string]
+        
+        local BlockMin = CarToEval[2,number]
+        local BlockMax = CarToEval[3,number]
+        local TrainMin = CarToEval[4,number]
+        local TrainMax = CarToEval[5,number]
+        
+        local Location = CarToEval[6,string]
+        local Segment = CarToEval[7,string]
+    
+        local ApprovedMin = BlocksOK[Location,table][Train,table]["tilmin",number]
+        local ApprovedMax = BlocksOK[Location,table][Train,table]["tilmax",number]
+        
+        local Ready = CarsReady[Location,table][Segment,number]
+        local Available = CarsAvailable[Location,table][Segment,number]
+        
+        local A = !BlockMin | (Available >= BlockMin)
+        local B = !BlockMax | (Ready < BlockMax)
+        local C = !TrainMin | (ApprovedMin >= TrainMin)
+        local D = !TrainMax | (ApprovedMax < TrainMax)
+        
+        local E = ((Train == "" | !TrainMax | !BlockMin) | ((ApprovedMax - Ready + BlockMin) < TrainMax))
+        
+        if(A+B+C+D+E == 5){
+            
+            if(!CarsReady[Location,table]:count()){
+                CarsReady[Location,table] = table()
+            }
+            
+            if(!BlocksOK[Location,table]:count()){
+                BlocksOK[Location,table] = table()
+            }
+            
+            increment(CarsReady[Location,table],Segment,1)
+            increment(BlocksOK[Location,table][Train,table],"tilmax",1)
+            
+            printM("Unheld Car "+CarToEval[1,string]+", job "+Segment)
+            
+            local CarTable = MainEntityList[CarToEval[1,string],table]
+            MainEntityList[CarToEval[1,string],table]["hold",number] = 0
+            markcar(entity(CarToEval[1,string]:toNumber()),CarTable["route",array],CarTable["step",number],0)
+            
+        }
+        
+        ToEvaluate:remove(1)
+        
+        
+    }
+    
+    while(CheckDeletions:count() & safe()){
+        
+        local CarTable = MainEntityList[CheckDeletions[1,string],table]
+        local CarEnts = CarTable["ents",array]
+        
+        if(CheckDeletions[1,string]:toNumber() != 0){
+        
+            for(X = 1,CarEnts:count()){
+            
+                if(!entity(CarEnts[X,number]):isValidPhysics()){
+        
+                    for(Y = 1,CarEnts:count()){
+                            
+                        entity(CarEnts[Y,number]):propDelete()
+                        
+                    }
+                    
+                    if(CarTable["out",number] == 0){
+                    
+                        send(table("name" = "deleted","ent" = CarEnts[1,number]:toString()))
+                        
+                    }
+                        
+                    MainEntityList:remove(CheckDeletions[1,string])
+                        
+                    break
+                    
+                }
+                
+            }
+            
+        }
+        
+        CheckDeletions:remove(1)
+        
+    }
+    
+    if(HoldState == "process" & ToEvaluate:count() == 0){
+        
+        HoldState = ""
+        
+    }
+    
+    while(TimersToRecheck:count() & safe()){
+            
+        local CarIndex = TimersToRecheck[1,string]
+        local TimerEnd = MainEntityList[CarIndex,table]["timer end",number]
+            
+        if(TimerEnd != 0){
+            
+            local Index = 1
+            
+            while(SortedTimers[Index*2,number] < TimerEnd & SortedTimers[Index*2,number]){
+        
+                Index++
+                
+            }
+            
+            SortedTimers:insertString(Index*2-1,"CarID|"+CarIndex)
+            SortedTimers:insertNumber(Index*2,TimerEnd)
+            
+        }
+        
+        TimersToRecheck:remove(1)
+        
+    }
+    
+    while(LocsToMark:count() & safe()){
+        
+        local A = WorldMarks[LocsToMark[1,number],array]
+        WorldMarkEnts:pushEntity(textworld(A[1,string],A[2,vector],A[3,number]))
+        LocsToMark:remove(1)
+        
+    }
+    
+    
+}
+
+if(clk("send")){
+    
+    if(SignalStorage:count() & Response == Inc){
+        
+        Signal = SignalStorage[1,table]:clone()
+        SignalStorage:remove(1)
+        Inc = Response + 1
+        
+    }
+    
+    if(SignalStorage:count()){
+    
+        timer("send",50)
+        
+    }
+    
+}
+
+    
+    

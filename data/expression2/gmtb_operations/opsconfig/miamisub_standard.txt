@@ -1,0 +1,385 @@
+@name gmtb_operations/opsconfig/miamisub_standard
+@persist ConfigLoaded:string
+
+IndTurn = 40 #How many minutes it takes to change a car to unloaded once it reaches an industry
+
+
+#V0.8  - first-time setup and jank, compatible with v1.456
+#v0.81 - some small fixes for release to Seabo
+
+Tracks = table()
+WorldMarks = table()
+Segments = table()
+Trains = table()
+TrainPresets = table()
+
+TargetCarcount = 200
+
+Map = "gm_miamisub"
+ConfigName = "Miami Sub Standard v0.7"
+ConfigLoaded = "v1.461"
+Era = "2000s"
+
+function table zoneblock(N,A:array){
+    
+    local XP = YP = ZP = -inf()
+    local XN = YN = ZN = inf()
+    
+    for(X = 1,A:count()){
+        
+        Dat = Tracks[A[X,string],table]
+        
+        if(Dat:count()){
+        
+            XP = max(XP,max(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YP = max(YP,max(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZP = max(ZP,max(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+            XN = min(XN,min(Dat["boxhi",vector]:x(),Dat["boxlo",vector]:x()))
+            YN = min(YN,min(Dat["boxhi",vector]:y(),Dat["boxlo",vector]:y()))
+            ZN = min(ZN,min(Dat["boxhi",vector]:z(),Dat["boxlo",vector]:z()))
+            
+        }else{
+            
+            error("Zoneblock could not find the locale \""+A[X,string])
+            
+        }
+        
+    }
+    
+    for(X = 1,A:count()* N){
+        
+        Tracks[A[X,string],table]["boxhi",vector] = vec(XP,YP,ZP)
+        Tracks[A[X,string],table]["boxlo",vector] = vec(XN,YN,ZN)
+        
+    }
+    
+    return table(vec(XP,YP,ZP),vec(XN,YN,ZN))
+    
+}
+
+function cyclecloner(T:table,R:array,S:string,T2:table){
+    
+    for(X = 1,R:count()){
+        
+        local OldName = R[X,string]
+        local NewName = OldName + S
+        
+        T[NewName,table] = T[OldName,table]:merge(T2)
+        
+    }
+   
+}
+
+if(Map != map()){
+    
+    print("Wrong configuration for \""+map()+"\". This config is designed for "+Map)
+    
+}
+
+Colors = table()
+Colors["bowden",vector] = vec(170,129,254)
+Colors["dade",vector] = vec(132,193,122)
+Colors["hialeah",vector] = vec(30,105,30)
+Colors["tower",vector] = vec(30,180,254)
+
+Tracks["bowdenin",table] = table("inbound" = 1,"route exclusion" = "bowden","work" = array(5,"manifest","manifest","manifest"),"not a destination" = 1,
+"name" = "Bowden, FL","color" = Colors["bowden",vector],
+"boxhi" = vec(-4089,-14811,2463),"boxlo" = vec(-13429,-15205,2263))
+
+Tracks["bowdenout1",table] = table("part of" = "bowdenout",
+"boxhi" = vec(-9032,-15002,2463),"boxlo" = vec(-14612,-15205,2262),
+"spawnpos" = vec(-14512,-15102,2363),"spawnang" = -90)
+Tracks["bowdenout2",table] = table("part of" = "bowdenout",
+"boxhi" = vec(-9030,-14811,2463),"boxlo" = vec(-14610,-15013,2262),
+"spawnpos" = vec(-14510,-14913,2363),"spawnang" = -90)
+TX3 = zoneblock(0,array("bowdenout1","bowdenout2"))
+
+Tracks["bowdenout",table] = table("outbound" = 1,"route exclusion" = "bowden",
+"name" = "Bowden, FL","color" = Colors["bowden",vector],
+"boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+Tracks["s1",table] = table("part of" = "bowdenin",
+"boxhi" = vec(8580,-14619,2463),"boxlo" = vec(-8805,-14821,2262),
+"spawnpos" = vec(-8705,-14720,2363),"spawnang" = -90)
+Tracks["s2",table] = table("part of" = "bowdenin",
+"boxhi" = vec(7993,-14427,2463),"boxlo" = vec(-8808,-14629,2261),
+"spawnpos" = vec(-8708,-14528,2363),"spawnang" = -90)
+Tracks["s3",table] = table("part of" = "bowdenin",
+"boxhi" = vec(7213,-14235,2463),"boxlo" = vec(-8810,-14437,2261),
+"spawnpos" = vec(-8710,-14335,2363),"spawnang" = -90)
+Tracks["s4",table] = table("part of" = "bowdenin",
+"boxhi" = vec(6340,-14043,2463),"boxlo" = vec(-8806,-14243,2263),
+"spawnpos" = vec(-8706,-14143,2363),"spawnang" = -90)
+Tracks["s5",table] = table("part of" = "bowdenin",
+"boxhi" = vec(6329,-13851,2463),"boxlo" = vec(-8809,-14143,2262),
+"spawnpos" = vec(-8709,-13952,2363),"spawnang" = -90)
+
+Tracks["y1",table] = table("part of" = "hialeah",
+"boxhi" = vec(15268,6340,2463),"boxlo" = vec(15027,5761,2262),
+"spawnpos" = vec(15127,6240,2363),"spawnang" = -170)
+Tracks["y2",table] = table("part of" = "hialeah",
+"boxhi" = vec(15075,6374,2465),"boxlo" = vec(14875,3353,2261),
+"spawnpos" = vec(14975,6274,2362),"spawnang" = 180)
+Tracks["y3",table] = table("part of" = "hialeah",
+"boxhi" = vec(14883,7186,2464),"boxlo" = vec(14683,4007,2261),
+"spawnpos" = vec(14783,7086,2361),"spawnang" = 180)
+Tracks["y4",table] = table("part of" = "hialeah",
+"boxhi" = vec(14693,6336,2470),"boxlo" = vec(14408,-6649,2261),
+"spawnpos" = vec(14549,6236,2362),"spawnang" = -170)
+Tracks["y5",table] = table("part of" = "hialeah",
+"boxhi" = vec(14500,6310,2464),"boxlo" = vec(14299,3232,2261),
+"spawnpos" = vec(14399,6210,2362),"spawnang" = -180)
+Tracks["y6",table] = table("part of" = "hialeah",
+"boxhi" = vec(14309,5545,2464),"boxlo" = vec(14072,1828,2261),
+"spawnpos" = vec(14172,5445,2363),"spawnang" = -170)
+Tracks["y7",table] = table("part of" = "hialeah",
+"boxhi" = vec(14117,5587,2469),"boxlo" = vec(13915,-5835,2261),
+"spawnpos" = vec(14015,5487,2362),"spawnang" = 180)
+
+TX3 = zoneblock(0,array("y1","y2","y3","y4","y5","y6","y7"))
+
+Tracks["hialeah",table] = table(
+"name" = "Hialeah Yard","color" = Colors["hialeah",vector],
+"boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+
+Tracks["hfuel1",table] = table("work" = array(0.5,"general_tanker","fuel","empty",0.5,"tie_gondola 1960","ties","empty",0.5,"general_gondola","wheels","empty"),
+"name" = "Hialeah Fuel Track","color" = vec(57, 161, 16),
+"boxhi" = vec(13925,3689,2462),"boxlo" = vec(13573,-1161,2253),
+"spawnpos" = vec(13824,-1061,2362),"spawnang" = 0)
+Tracks["hfuel2",table] = Tracks["hfuel1",table]:merge(table(
+"boxhi" = vec(13752,3949,2462),"boxlo" = vec(13339,-456,2251),
+"spawnpos" = vec(13440,-356,2361),"spawnang" = 0))
+zoneblock(1,array("hfuel1","hfuel2"))
+
+
+Tracks["towerin",table] = table("inbound" = 1,"work" = array(15,"manifest","manifest","manifest"),"not a destination" = 1,
+"name" = "Tower Interchange","color" = Colors["tower",vector],"route exclusion" = "other",
+"boxhi" = vec(-7193,14481,2467),"boxlo" = vec(-7397,9491,2262),
+"spawnpos" = vec(-7297,14381,2363),"spawnang" = -180)
+Tracks["towerout",table] = table("outbound" = 1,"delete" = 1,"time" = 0.5,
+"name" = "Tower Interchange","color" = Colors["tower",vector],"route exclusion" = "other",
+"boxhi" = vec(-7194,14259,2464),"boxlo" = vec(-7395,9705,2262))
+
+
+
+Tracks["dadein",table] = table("route exclusion" = "other",
+"name" = "Dade Mainline Offmap","color" = Colors["dade",vector],"inbound" = 1,"work" = array(15,"manifest","manifest","manifest"),"not a destination" = 1,
+"boxhi" = vec(13044,-9691,2465),"boxlo" = vec(10234,-9892,2262),
+"spawnpos" = vec(12944,-9791,2363),"spawnang" = 90)
+
+Tracks["dadeout",table] = Tracks["dadein",table]:merge(table("inbound" = 0,"delete" = 1,"time" = 0.5,"outbound" = 1,"not a destination" = 0,
+"name" = "Dade Mainline Offmap","color" = Colors["dade",vector],"route exclusion" = "other"))
+
+TX3 = zoneblock(0,array("dadein","dadeout"))
+Tracks["dadeout",table]["boxhi",vector] = TX3[1,vector]
+Tracks["dadeout",table]["boxlo",vector] = TX3[2,vector]
+
+### LAYER 1 INDUSTRIES ###
+
+Tracks["auto1",table] = table("work" = array(10,"autorack","loaded","empty"),
+"name" = "Dade Auto Terminal","color" = vec(100, 10, 186),
+"boxhi" = vec(6606,-8435,2463),"boxlo" = vec(-1626,-8637,2257),
+"spawnpos" = vec(-1526,-8535,2363),"spawnang" = -90)
+Tracks["auto2",table] = table("part of" = "auto1",
+"boxhi" = vec(5347,-8115,2463),"boxlo" = vec(-1623,-8317,2262),
+"spawnpos" = vec(-1523,-8216,2363),"spawnang" = -90)
+Tracks["auto3",table] = table("part of" = "auto1",
+"boxhi" = vec(4625,-7923,2463),"boxlo" = vec(-1626,-8125,2261),
+"spawnpos" = vec(-1526,-8023,2363),"spawnang" = -90)
+Tracks["auto4",table] = table("part of" = "auto1",
+"boxhi" = vec(3770,-7731,2463),"boxlo" = vec(-1626,-7933,2263),
+"spawnpos" = vec(-1526,-7833,2363),"spawnang" = -90)
+Tracks["auto5",table] = table("part of" = "auto1",
+"boxhi" = vec(3861,-7539,2463),"boxlo" = vec(-1626,-7860,2256),
+"spawnpos" = vec(-1526,-7641,2363),"spawnang" = -90)
+zoneblock(1,array("auto1","auto2","auto3","auto4","auto5"))
+
+Tracks["inter1",table] = table("work" = array(3,"triple_wellcar_40ft","loaded1","loaded2"),
+"name" = "Dade Container Port","color" = vec(99, 155, 249),
+"boxhi" = vec(8226,-6282,2463),"boxlo" = vec(611,-6565,2263),
+"spawnpos" = vec(8126,-6465,2363),"spawnang" = 90)
+Tracks["inter2",table] = table("part of" = "inter1",
+"boxhi" = vec(8225,-6171,2463),"boxlo" = vec(479,-6373,2263),
+"spawnpos" = vec(8125,-6273,2363),"spawnang" = 90)
+Tracks["inter3",table] = table("part of" = "inter1",
+"boxhi" = vec(8225,-5979,2463),"boxlo" = vec(-309,-6180,2263),
+"spawnpos" = vec(8125,-6080,2363),"spawnang" = 90)
+Tracks["inter4",table] = table("part of" = "inter1",
+"boxhi" = vec(8225,-5723,2463),"boxlo" = vec(-1343,-5925,2262),
+"spawnpos" = vec(8125,-5825,2363),"spawnang" = 90)
+zoneblock(1,array("inter1","inter2","inter3","inter4"))
+
+#Jefferson North America
+Tracks["vulcan",table] = table("work" = array(1,"aggregate","empty","aggregate"),
+"name" = "Vulcan Sand Plant","color" = vec(195, 174, 141),
+"boxhi" = vec(13053,-6147,2464),"boxlo" = vec(9630,-9026,2262),
+"spawnpos" = vec(9730,-7261,2363),"spawnang" = -45)
+
+
+
+### LAYER 2 ###
+
+Tracks["fpt",table] = table("work" = array(1,"general_boxcar","misc","unknown"),
+"name" = "Ferrous Processing & Trading","color" = vec(229, 147, 144),
+"boxhi" = vec(8276,9029,159),"boxlo" = vec(2779,8351,-42),"locgroup" = "layer2",
+"spawnpos" = vec(8176,8929,59),"spawnang" = 90)
+
+Tracks["iron",table] = table("work" = array(1,"scrap_gondola","empty","scrap"),
+"name" = "Miami Iron & Metal","color" = vec(203, 136, 115),
+"boxhi" = vec(-284,9731,159),"boxlo" = vec(-4074,8919,-42),
+"spawnpos" = vec(-384,9631,59),"spawnang" = 90)
+
+Tracks["antillean",table] = table("work" = array(1,"general_boxcar","overseas2","overseas"),
+"name" = "Antillean","color" = vec(193, 155, 132),"locgroup" = "layer2",
+"boxhi" = vec(-8421,8740,159),"boxlo" = vec(-13031,8441,-53),
+"spawnpos" = vec(-12931,8640,59),"spawnang" = -105)
+
+Tracks["sungas",table] = table("work" = array(1,"lpg_tanker","lpg","empty"),
+"name" = "Sungas","color" = vec(232, 224, 150),"locgroup" = "layer2",
+"boxhi" = vec(-7841,15394,159),"boxlo" = vec(-10082,14685,-42),
+"spawnpos" = vec(-7941,15294,59),"spawnang" = 105)
+
+Tracks["eddison",table] = table("work" = array(1,"general_boxcar","electrical","empty"),
+"name" = "Eddyson Electrical Products","color" = vec(202, 134, 171),"locgroup" = "layer2",
+"boxhi" = vec(-1427,15413,159),"boxlo" = vec(-6832,14661,-41),
+"spawnpos" = vec(-6732,15312,59),"spawnang" = -90)
+
+Tracks["family",table] = table("work" = array(1,"insul","empty","produce"),
+"name" = "Family & Son Produce","color" = vec(168, 221, 166),"locgroup" = "layer2",
+"boxhi" = vec(9677,14789,160),"boxlo" = vec(739,14587,-49),
+"spawnpos" = vec(839,14688,59),"spawnang" = -90)
+
+Tracks["paper",table] = table("work" = array(1,"general_boxcar","empty","wastepaper"),
+"name" = "Miami Waste Paper","color" = vec(123, 221, 133),"locgroup" = "layer2",
+"boxhi" = vec(14693,12590,159),"boxlo" = vec(14232,9653,-42),
+"spawnpos" = vec(14332,9753,59),"spawnang" = -30)
+
+Tracks["panam",table] = table("work" = array(0.3,"reefer","empty","frozenfood"),
+"name" = "PanAm Frozen Food","color" = vec(141, 173, 233),"locgroup" = "layer2",
+"boxhi" = vec(15269,7876,159),"boxlo" = vec(14823,5352,-46),
+"spawnpos" = vec(15168,7776,59),"spawnang" = 180)
+
+Tracks["chicago",table] = table("work" = array(1,"insul","empty","produce"),
+"name" = "Chicago Produce","color" = vec(232, 193, 150),"locgroup" = "layer2",
+"boxhi" = vec(15141,2162,159),"boxlo" = vec(14850,-2820,-42),
+"spawnpos" = vec(15040,-2720,59),"spawnang" = 0)
+
+Tracks["trujillo",table] = table("work" = array(1,"general_boxcar","empty","supplies"),
+"name" = "Trujillo & Sons","color" = vec(131, 142, 221),"locgroup" = "layer2",
+"boxhi" = vec(10112,-8771,159),"boxlo" = vec(-228,-9316,-42),
+"spawnpos" = vec(-128,-9216,59),"spawnang" = -90)
+
+Tracks["produce",table] = table("work" = array(1,"insul","empty","produce"),
+"name" = "Miami Produce Center","color" = vec(138, 206, 200),"locgroup" = "layer2",
+"boxhi" = vec(7847,-2490,164),"boxlo" = vec(5575,-2693,-42),
+"spawnpos" = vec(7747,-2592,59),"spawnang" = 90)
+
+#[
+cyclecloner(Tracks,array("s1","s2","s3","s4","s5"),"road",table("part of" = "bowdenroad"))
+Tracks["bowdenroad",table] = Tracks["bowden",table]table("inbound" = 1,
+"name" = "Bowen","color" = Colors["bowden",vector],
+"boxhi" = vec(-4089,-14811,2463),"boxlo" = vec(-13429,-15205,2263))]#
+
+    
+Segments["local1",table] = table(
+    "job" = "Layer 1","color" = Colors["hialeah",vector],"name" = "Port Switcher",
+    "routing" = table(array("hialeah"),array("auto1","auto2","auto3","auto4","auto5","vulcan"),array("hialeah")))
+    
+Segments["local2",table] = table(
+    "job" = "Layer 2","color" = Colors["hialeah",vector],"name" = "Road Local",
+    "routing" = table(array("hialeah"),array("fpt","sungas","produce","panam","paper","iron","antillean","chicago","eddison","family","trujillo"),array("fpt","sungas","produce","panam","paper","iron","antillean","chicago","eddison","family","trujillo"),array("hialeah")))
+
+Segments["local0",table] = table(
+    "job" = "Hialeah","color" = Colors["hialeah",vector],"name" = "Yard Work",
+    "routing" = table(array("hialeah"),array("hfuel1","hfuel2"),array("hialeah")))
+
+
+
+Segments["bowdentohialeah",table] = table(
+    "job" = "Inbound from Bowden","color" = Colors["hialeah",vector],"name" = "Train",
+    "routing" = table(array("bowdenin"),array("hialeah")))
+
+Segments["hialeahtobowden",table] = table(
+    "job" = "Outbound","color" = Colors["bowden",vector],"name" = "Train",
+    "routing" = table(array("hialeah"),array("bowdenout")))
+
+
+Segments["hialeahtotower",table] = table(
+    "job" = "Outbound","color" = Colors["tower",vector],"name" = "Train",
+    "routing" = table(array("hialeah"),array("towerout")))
+Segments["towertohialeah",table] = table(
+    "job" = "Inbound from Tower Jct.","color" = Colors["hialeah",vector],"name" = "Train",
+    "routing" = table(array("towerin"),array("hialeah")))
+
+
+
+Segments["hialeahtodade",table] = table(
+    "job" = "Outbound","color" = Colors["dade",vector],"name" = "Train",
+    "routing" = table(array("hialeah"),array("dadeout")))
+Segments["dadetohialeah",table] = table(
+    "job" = "Inbound from Dade","color" = Colors["hialeah",vector],"name" = "Train",
+    "routing" = table(array("dadein"),array("hialeah")))
+
+
+
+
+
+
+TrainPresets["layer2",table] = table("name" = "Layer 2 Local","desc" = "Starts in Hialeah, serves Layer 2 Industries","color" = Colors["hialeah",vector],
+"data" = table(table("share" = 1,"spawns" = array("open","hialeah"),"depth" = 3,"jobs" = array("local2"))),"length" = 10)
+
+
+
+
+
+Segments["hialeahtodade",table] = table(
+    "job" = "Outbound to Dade Mainline","color" = Colors["tower",vector],"name" = "Train",
+    "routing" = table(array("hialeah"),array("dadeout")))
+Segments["dadetohialeah",table] = table(
+    "job" = "Inbound from Dade Mainline","color" = Colors["hialeah",vector],"name" = "Train",
+    "routing" = table(array("dadein"),array("hialeah")))
+    
+    
+Segments["dadetobowden",table] = table(
+    "job" = "Inbound from Dade Mainline","color" = Colors["bowden",vector],"name" = "Train",
+    "routing" = table(array("dadein"),array("bowdenout")))
+Segments["towertobowden",table] = table(
+    "job" = "Inbound from Dade Mainline","color" = Colors["bowden",vector],"name" = "Train",
+    "routing" = table(array("towerin"),array("bowdenout")))
+
+
+Segments["bowdentotower",table] = table(
+    "job" = "Inbound from Dade Mainline","color" = Colors["tower",vector],"name" = "Train",
+    "routing" = table(array("bowdenin"),array("towerout")))
+Segments["bowdentodade",table] = table(
+    "job" = "Inbound from Dade Mainline","color" = Colors["dade",vector],"name" = "Train",
+    "routing" = table(array("bowdenin"),array("dadeout")))
+    
+
+Segments["containers1",table] = table(
+    "job" = "Container Train","color" = Colors["inter1",vector],"name" = "Train",
+    "routing" = table(array("dadein","bowdenin","towerin"),array("inter1")))
+
+Segments["containers2",table] = table(
+    "job" = "Container Train","color" = Colors["hialeah",vector],"name" = "Train",
+    "routing" = table(array("inter1"),array("dadeout")))
+Segments["containers3",table] = table(
+    "job" = "Container Train","color" = Colors["bowden",vector],"name" = "Train",
+    "routing" = table(array("inter1"),array("bowdenout")))
+Segments["containers4",table] = table(
+    "job" = "Container Train","color" = Colors["tower",vector],"name" = "Train",
+    "routing" = table(array("inter1"),array("towerout")))
+
+
+WorldMarks:pushArray(array("produce",vec(5611,-2393,208),270))
+WorldMarks:pushArray(array("fpt",vec(5125,8442,246),270))
+WorldMarks:pushArray(array("sungas",vec(-7543,15225,252),270))
+WorldMarks:pushArray(array("trujillo",vec(3596,-9342,188),90))
+WorldMarks:pushArray(array("paper",vec(14265,12661,221),25))
+WorldMarks:pushArray(array("family",vec(5571,14898,192),270))
+WorldMarks:pushArray(array("antillean",vec(-9784,8766,200),270))
+WorldMarks:pushArray(array("eddison",vec(-3318,14938,207),270))
+WorldMarks:pushArray(array("panam",vec(15278,6343,230),180))
+WorldMarks:pushArray(array("chicago",vec(15190,-174,277),180))
+

@@ -1,0 +1,172 @@
+@name gmtb_operations/color_centrifuge
+@persist Colors:table Increment Keys:array E:entity Scale Phase:string HID Overall Print:array
+@outputs Colors:table
+
+
+if(first()){
+    
+    HID = 1000
+    
+    function line(P1:vector,P2:vector,V:vector){
+        
+        Width = 0.1
+    
+        HID++
+        holoCreate(HID,E:toWorld((P1+P2)/2),vec(P1:distance(P2)/480,Width,Width),(P1-P2):toAngle(),V,"models/sprops/rectangles/size_1/rect_3x480x3.mdl")
+        
+        holoMaterial(HID,"models/debug/debugwhite")
+        
+    }
+    
+    Phase = "start"
+    
+    Increment = 1
+    Scale = 0.5
+    
+    Colors = table()
+    
+    Colors["avoid1",vector] = vec(255,0,0)
+    Colors["avoid2",vector] = vec(0,255,0)
+    Colors["avoid3",vector] = vec(0,0,255)
+    Colors["avoid4",vector] = vec(255,255,0)
+    Colors["avoid5",vector] = vec(255,0,255)
+    Colors["avoid6",vector] = vec(0,255,255)
+    #Colors["avoid7",vector] = vec(0,0,0)
+    Colors["avoid8",vector] = vec(255,255,255)
+    Colors["avoid9",vector] = vec(255,255,255)*0.25
+    
+    
+    Colors["hialeah",vector] = vec(26, 239, 17)
+    Colors["bowden",vector] = vec(40, 180, 254)
+    Colors["tower",vector] = vec(40, 180, 254)
+    Colors["dade",vector] = vec(40, 180, 254)
+    
+    
+
+    
+    Keys = Colors:keys()
+    
+    E = entity()
+    
+    
+}
+
+if(Phase == "start"){
+    
+
+    while(Increment <= Colors:count() & holoCanCreate() & minquota() > 2000){
+        
+        Vector = Colors[Keys[Increment,string],vector]
+        
+        holoCreate(Increment,E:toWorld(Vector*Scale+vec(10)),vec(Scale),ang(0),Vector,"cube")
+        holoParent(Increment,E)
+        Increment++
+        
+    }
+    
+    if(Increment > Colors:count()){
+        
+        Phase = "two"
+        Increment = 1
+        
+    }
+    
+}
+
+if(Phase == "two"){
+    
+    while(Increment <= Keys:count() & holoCanCreate() & minquota() > 1000){
+        
+        Vector = Colors[Keys[Increment,string],vector]
+        local MoveBy = vec()
+        
+        for(Y = 1,Keys:count()){
+            
+            Diff = Vector - Colors[Keys[Y,string],vector]
+            
+            
+            
+            if(Y != Increment){
+                
+                if(Diff:length() == 0){
+                
+                print(Keys[Y,string]+" "+Keys[Increment,string])
+                
+            }
+                
+                if(Diff:length() < 90){
+                    DVal = 3
+                }else{
+                    DVal = 0
+                }
+                
+                MoveBy = MoveBy + (Diff:normalized()+randvec(-0.1,0.1))*DVal#clamp((100/(clamp(Diff:length(),0.01,450))),5,10)
+            
+            }
+            
+        }
+        
+        #print(round(MoveBy))
+            
+        NewVector = round(clamp(Vector + MoveBy,vec(30),vec(255)),2)+randvec(-0.1,0.1)
+        
+        #line(Vector*Scale+vec(10),NewVector*Scale+vec(10),NewVector)
+        
+        holoPos(Increment,E:toWorld(NewVector*Scale+vec(10)))
+        holoColor(Increment,NewVector)
+        Colors[Keys[Increment,string],vector] = NewVector
+        Increment++
+        
+    }
+    
+    if(Increment > Colors:count()){
+        
+        #Phase = "wait"
+        Increment = 1
+        #timer("wait",500)
+        Overall++
+        
+        if(Overall > 100){
+            
+            Phase = "print"
+            Print = Colors:keys()
+            
+        }
+        
+    }
+    
+}
+
+if(Phase == "print"){
+    
+    while(Print:count() & playerCanPrint()){
+        
+        Highest = "}"
+        Index = 0
+        
+        foreach(V,Entry:string = Print){
+            
+            if(Highest > Entry){
+                
+                Highest = Entry
+                Index = V
+                
+            }
+            
+        }
+        
+        if(!Print[Index,string]:find("avoid")){
+        
+            printColor(array(Colors[Print[Index,string],vector],"Colors[\""+Print[Index,string]+"\",vector] = vec"+round(Colors[Print[Index,string],vector]):toString():replace("[","("):replace("]",")")))
+            
+        }
+        
+        Print:remove(Index)
+        
+    }
+    
+    
+}
+
+
+interval(100)

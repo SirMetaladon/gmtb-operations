@@ -1,0 +1,462 @@
+@name gmtb_operations/trackmanager_ssgrsg_v2.2
+@inputs Ent:entity T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12
+@outputs X Y Z Respawnify First I1 I2 I3 I4 I5 I6 I7 I8 I9 I10 I11 I12 I13 I14 I15 I16 I17 I18 I19 I20 I21 I22 I23 I24 I25 I26 I27 I28 I29 I30 I31 I32 I33 I34 I35 I36 I37
+@persist X C S In:array SP:table SC:array P:table O:entity E:entity Y InB:array Z Respawnify Advance T:table L First Main Count Adder:array
+@trigger all
+@model models/props_c17/consolebox03a.mdl
+
+function array compare(A1:array,A2:array){
+    
+    Outpoot = array()
+    
+    for(X = 1,A1:count()){
+        
+        if(A1[X,number] != A2[X,number]){
+            
+            Outpoot = Outpoot:add(array(X))
+            
+        }
+        
+    }
+    
+    return Outpoot
+    
+}
+    
+if(first() | dupefinished()){
+    
+    X = 1
+    S = 4
+    C = 1
+    C2 = 1
+    Y = 1
+    P = table()
+    Upd = 1
+    Respawnify = 1
+    
+    First = 2
+    
+    IV = "models/proppertextures/invisible"
+    CC = "models/trakpak2/concretefloor011a"
+    SB = table()
+    
+    O = owner()
+    E = entity()
+    runOnChat(1)
+    
+    In = array()
+    
+    propSpawnUndo(0)
+    runOnLast(1)
+    
+    rangerIgnoreWorld(1)
+    rangerPersist(1)
+    
+    noCollideAll(Ent,!C2)
+    Ent:setAlpha((C2*240)+15)
+    
+    #[
+    SP = table(
+    
+    array("models/trakpak2/grades/s0512_8.mdl",vec(-1920,8128,24),ang(0,90,0),1,#crossover
+    "models/trakpak2/grades/s0512_8.mdl",vec(-1920+256,8128,24),ang(0,90,0),1,
+    "models/trakpak2/turnouts/r1536/right_crossover_mn.mdl",vec(-1920+128,8128-512-(256*2.5),32),ang(0,90,0),1,
+    "models/trakpak2/turnouts/r1536/right_crossover_dv.mdl",vec(-1920+128,8128-512-(256*2.5),32),ang(0,90,0),0,
+    "models/trakpak2/grades/s0512_8.mdl",vec(-1920,5824,24),ang(0,-90,0),1,
+    "models/trakpak2/grades/s0512_8.mdl",vec(-1920+256,5824,24),ang(0,-90,0),1),
+    table(array(4,3,4),
+    array(vec(-1662,6336,26),4,0,vec(-1917,7617,26),4,0),
+    table())
+    table(1,array(1,IV,2,IV),2,array(3,IV,4,IV),3,array(3,IV,4,IV),4,array(1,IV,2,IV),5,array(1,IV,2,IV),6,array(1,IV,2,IV))) 
+    array(
+    "models/trakpak2/grades/s0512_8.mdl",vec(-2368+512,-6144,-3824),ang(0,0,0),1,#godfather runaround
+    "models/trakpak2/turnouts/r2048/right_225_mn.mdl",vec(-2368,-6144,-3824+8),ang(0,0,0),1,#33
+    "models/trakpak2/turnouts/r2048/right_225_dv.mdl",vec(-2368,-6144,-3824+8),ang(0,0,0),0,
+    "models/trakpak2/grades/s0512_8.mdl",vec(-2368-512-1024,-6144,-3824),ang(0,180,0),1,
+    "models/trakpak2/straights/s0384.mdl",vec(-3152,-5989,-3816)+vec(0,192,0):rotateAroundAxis(vec(0,0,1),90-22.5),ang(0,180-22.5,0),1,
+    "models/trakpak2/straights/s0512.mdl",vec(-3152,-5989,-3816)+vec(0,384+256,0):rotateAroundAxis(vec(0,0,1),90-22.5),ang(0,180-22.5,0),1,
+    "models/trakpak2/turnouts/r2048/right_225_mn.mdl",vec(-5041,-5376,-3824+8),ang(0,180,0),1,
+    "models/trakpak2/turnouts/r2048/right_225_dv.mdl",vec(-5041,-5376,-3824+8),ang(0,180,0),0,
+    "models/trakpak2/straights/s0384.mdl",vec(-3152,-5989,-3816)+vec(0,384+512+110,0):rotateAroundAxis(vec(0,0,1),90-22.5),ang(0,180-22.5,0),1,
+    "models/trakpak2/grades/s0512_8.mdl",vec(-5041+1536,-5376,-3824),ang(0,0,0),1,
+    "models/trakpak2/grades/s0512_8.mdl",vec(-5041-512,-5376,-3824),ang(0,180,0),1),
+    table(array(6,2,3,7,7,8),
+    array(vec(-3391,-6145,-3822),6,0,vec(-3158,-5988,-3822),6,1,vec(-4254,-5529,-3822),7,1,vec(-4018,-5374,-3822),7,0),
+    table(array(1,1,IV,2,IV),array(2,4,IV,1,IV),array(3,1,IV,4,IV),array(4,1,IV,2,IV),array(5,1,IV,2,IV),array(6,1,CC,2,CC),array(9,1,CC,2,CC))),
+    array("models/trakpak2/special/diamond_90_physical.mdl",vec(14848,9984,2073),ang(0,0,0),0,#drock interchange
+    "models/trakpak2/special/diamond_90_physical.mdl",vec(14848+256,9984,2073),ang(0,0,0),0,
+    "models/trakpak2/curves/r1536/left_90.mdl",vec(14848-128,9984,2073),ang(0,0,0),1,
+    "models/trakpak2/straights/s8192.mdl",vec(14848-128-1536,9984-1536-4096,2073),ang(0,90,0),1,
+    "models/trakpak2/special/bumper4.mdl",vec(14848-128,9984,2073),ang(0,180,0),1,
+    "models/trakpak2/straights/s2048.mdl",vec(14848-128-1536,256-1024,2073),ang(0,-90,0),1,
+    "models/trakpak2/straights/s0128.mdl",vec(14848-128-1536,256-2048-64,2073),ang(0,-90,0),1,
+    "models/trakpak2/curves/r1536/left_45.mdl",vec(13184,256-2048-128,2073),ang(0,90,0),1,
+    "models/trakpak2/turnouts/r1536/left_45_mn.mdl",vec(14592,-4596,2073),ang(0,-90,0),1,#51
+    "models/trakpak2/turnouts/r1536/left_45_dv.mdl",vec(14592,-4596,2073),ang(0,-90,0),0,#52
+    "models/trakpak2/grades/s0512_16.mdl",vec(14592,-4596-512,2073-16),ang(0,-90,0),1,
+    "models/trakpak2/grades/s0512_16.mdl",vec(14592,-4596+512+1024,2073-16),ang(0,90,0),1,
+    "models/trakpak2/straights/s0768.mdl",vec(13888,-3258,2073),ang(0,-45,0),1),
+    table(array(8,9,10),
+    array(vec(14595,-3571,2067),8,0,vec(14149,-3521,2067),8,1),
+    table()),
+    array("models/trakpak2/grades/s0512_16.mdl",vec(-5-9216+128+512,7808,-8615-16),ang(0,0,0),1,#rockfort crossover
+    "models/trakpak2/turnouts/r1536/left_45_mn.mdl",vec(-5-9216+128,7808,-8615),ang(0,0,0),1,
+    "models/trakpak2/turnouts/r1536/left_45_dv.mdl",vec(-5-9216+128,7808,-8615),ang(0,0,0),0,
+    "models/trakpak2/grades/s0512_16.mdl",vec(-5-9216+128-1024-512,7808,-8615-16),ang(0,180,0),1,
+    "models/trakpak2/curves/r1536/right_45.mdl",vec(-5-9216+128-1536,7808-1536,-8615),ang(0,-90,0),1,
+    "models/trakpak2/turnouts/r1536/left_168a_mn.mdl",vec(-5-9216+128-1536,7809-1536-128-128,-8615),ang(0,-90,0),1,
+    "models/trakpak2/turnouts/r1536/left_168a_dv.mdl",vec(-5-9216+128-1536,7809-1536-128-128,-8615),ang(0,-90,0),0,
+    "models/trakpak2/straights/s0256.mdl",vec(-10629,6144,-8615),ang(0,-90,0),1,
+    "models/trakpak2/special/angled_s0384_128_left.mdl",vec(-10875,6065,-8620-0.2),ang(0,90,0):rotateAroundAxis(vec(1,0,0):rotateAroundAxis(vec(0,0,1),16.8),-1.31),1,
+    "models/trakpak2/special/angled_s0384_128_left.mdl",vec(-10491,4913,-8619+0.1),ang(0,90,0):rotateAroundAxis(vec(1,0,0):rotateAroundAxis(vec(0,0,1),16.8),1.3),1),
+    table(array(9,2,3,10,6,7),
+    array(vec(-10784,5850,-8621),9,0,vec(-10631,6016,-8621),9,1,vec(-10116,7815,-8621),10,0,vec(-10174,7353,-8621),10,1),
+    table(array(1,1,IV,2,IV))),
+    array("models/trakpak2/special/bumper2.mdl",vec(12736,-14592,-3815),ang(0,180,0),1,#derrickson grain upgrade
+    "models/trakpak2/straights/s4096.mdl",vec(12736-2048-128,-14592,-3815),ang(0,0,0),1,#67
+    "models/trakpak2/turnouts/r1536/left_168a_mn.mdl",vec(8512,-14592,-3815),ang(0,180,0),1,
+    "models/trakpak2/turnouts/r1536/left_168a_dv.mdl",vec(8512,-14592,-3815),ang(0,180,0),0,
+    "models/trakpak2/curves/r1536/left_168.mdl",vec(9024,-14336,-3815),ang(0,180,0),1,
+    "models/trakpak2/turnouts/r1536/left_168_mn.mdl",vec(6849-1,-14853+5,-3815),ang(0,180,0),1,
+    "models/trakpak2/turnouts/r1536/left_168_dv.mdl",vec(6849-1,-14853+5,-3815),ang(0,180,0),0,
+    "models/trakpak2/straights/s3072.mdl",vec(9024+1536,-14336,-3815),ang(0,180,0),1,
+    "models/trakpak2/straights/s0512.mdl",vec(9024+3072+256,-14336,-3815),ang(0,180,0),1,
+    "models/trakpak2/special/bumper2.mdl",vec(9024+3072+512+128,-14336,-3815),ang(0,180,0),1,
+    "models/trakpak2/straights/s2048.mdl",vec(6849-1+1536+512,-14853+5,-3815),ang(0,180,0),1,
+    "models/trakpak2/grades/s0512_16.mdl",vec(6849-1+1536+512+1024+512,-14853+5,-3815-16),ang(0,0,0),1,
+    "models/trakpak2/grades/s0512_16.mdl",vec(6849-1-512,-14853+5,-3815-16),ang(0,180,0),1),
+    table(array(11,3,4,12,6,7),
+    array(vec(-10784,5850,-8621),9,0,vec(-10631,6016,-8621),9,1,vec(-10116,7815,-8621),10,0,vec(-10174,7353,-8621),10,1),
+    table(array(6,3,IV),array(7,3,IV),array(13,1,IV,2,IV))))
+    
+    }]#
+    
+    SP = table(
+        array(
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_mn.mdl",vec(-12800,-4788,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_dv.mdl",vec(-12800,-4788,2080),ang(0,90,0),0,
+            "models/trakpak3_rsg/switches/sidings/p1rt_right_minr2048_+0768x+0192_+1488x+0576_mn.mdl",vec(-12896,-5492,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/switches/sidings/p1rt_right_minr2048_+0768x+0192_+1488x+0576_dv.mdl",vec(-12896,-5492,2080),ang(0,90,0),0,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t1lt_0fw_right_+0768x-0192_+0704x-0096_mn.mdl",vec(-12640,-7796,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t1lt_0fw_right_+0768x-0192_+0704x-0096_dv.mdl",vec(-12640,-7796,2080),ang(0,90,0),0,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_mn.mdl",vec(-12608,4812,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_dv.mdl",vec(-12608,4812,2080),ang(0,90,0),0,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1lt_left_+0768x00000_+0704x-0096_mn.mdl",vec(-12800,-4020,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1lt_left_+0768x00000_+0704x-0096_dv.mdl",vec(-12800,-4020,2080),ang(0,90,0),0,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1lt_left_+0768x00000_+0704x-0096_mn.mdl",vec(-12608,-5428,2080),ang(0,-90,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1lt_left_+0768x00000_+0704x-0096_dv.mdl",vec(-12608,-5428,2080),ang(0,-90,0),0,
+            "models/trakpak3_rsg/arcs/r2240/a0fw_1rt_right_0pg_+0752x+0096x0000.mdl",vec(-13568,-7732,2080),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s1536_0fw_0pg_+1536x00000x0000.mdl",vec(-13568,-7732,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/spl/bumpers/bumper_knuckle_ang0fw.mdl",vec(-13568,-9326,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/spl/trackends/end_ang0fw.mdl",vec(-13568,-9268,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/spl/bumpers/bumper_knuckle_ang0fw.mdl",vec(-13376,-11888,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/spl/trackends/end_ang0fw.mdl",vec(-13376,-11828,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s4096_0fw_0pg_+4096x00000x0000.mdl",vec(-13376,-7732,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a0fw_1rt_right_0pg_+0704x+0096x0000.mdl",vec(-13376,-7732,2080),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s0768_1rt_0pg_+0768x+0192x0000.mdl",vec(-13088,-6260,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s1024_0fw_0pg_+1024x00000x0000.mdl",vec(-12800,-5556,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s4096_0fw_0pg_+4096x00000x0000.mdl",vec(-12800,3404,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a0fw_1rt_right_0pg_+0704x+0096x0000.mdl",vec(-12800,3404,2080),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s0512_0fw_156pg_+0512x00000x+008up.mdl",vec(-12608,3532,2072),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s0512_0fw_156pg_+0512x00000x+008up.mdl",vec(-12608,5324,2072),ang(0,90,0),1,
+            "models/trakpak3_rsg/arcs/r4096/a0fw_1lt_left_0pg_+1216x-0160x0000.mdl",vec(-12800,-6580,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s2048_0fw_0pg_+2048x00000x0000.mdl",vec(-12544,-8500,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a0fw_1lt_left_0pg_+0704x-0096x0000.mdl",vec(-12352,-9268,2080),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s1024_0fw_0pg_+1024x00000x0000.mdl",vec(-12352,-9268,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_0pg_+0256x00000x0000.mdl",vec(-12352,-10292,2080),ang(0,90,0),1,
+            "models/props_metaladon/buildings/mill.mdl",vec(-12120,-11732,2092),ang(0,180,0),1,
+            
+            "models/trakpak3_rsg/straights/s0512_0fw_156pg_+0512x00000x+008up.mdl",vec(-12608,-5940,2072),ang(0,-90,0),1,
+            "models/trakpak3_rsg/straights/s0512_0fw_156pg_+0512x00000x+008up.mdl",vec(-12608,-4148,2072),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_0pg_+0256x00000x0000.mdl",vec(-12800,-3764,2080),ang(0,90,0),1,
+            "models/trakpak3_rsg/straights/s3072_0fw_0pg_+3072x00000x0000.mdl",vec(-12800,-692,2080),ang(0,90,0),1
+        
+        ),table(array(1,1,2,2,3,4,3,5,6,4,7,8,5,9,10,6,11,12),
+        array(vec(-12607,4042,2067),4,0,vec(-12702,4106,2067),4,1,vec(-12705,-4724,2067),5,1,vec(-12705,-4724,2067),6,1,vec(-12800,-4744,2067),5,0,vec(-12603,-4624,2067),6,0),
+        table(),8),
+        array(
+            "models/trakpak3_rsg/switches/turnouts/r2048/t2lt_0fw_right_+0768x-0384_+1056x-0256_mn.mdl",vec(4384,144,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t2lt_0fw_right_+0768x-0384_+1056x-0256_dv.mdl",vec(4384,144,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/switches/wyes/w0fw_1lt_1rt_r2048_+0704x-0096_+0704x+0096_dv.mdl",vec(5440,400,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/switches/wyes/w0fw_1lt_1rt_r2048_+0704x-0096_+0704x+0096_mn.mdl",vec(5440,400,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_2rt_right_+0768x00000_+1056x+0256_mn.mdl",vec(-5212,-5376,-3808),ang(0,-180,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_2rt_right_+0768x00000_+1056x+0256_dv.mdl",vec(-5212,-5376,-3808),ang(0,-180,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_2rt_right_+0768x00000_+1056x+0256_mn.mdl",vec(-2588,-6144,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_2rt_right_+0768x00000_+1056x+0256_dv.mdl",vec(-2588,-6144,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_mn.mdl",vec(-936,-736,-3800),ang(0,0,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_dv.mdl",vec(-936,-736,-3800),ang(0,0,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_mn.mdl",vec(-3624,-224,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/switches/turnouts/r2048/t0fw_1rt_right_+0768x00000_+0704x+0096_dv.mdl",vec(-3624,-224,-3800),ang(0,-180,0),1,
+            
+            "models/trakpak3_rsg/straights/s0256_2lt_279pg_+0256x-0128x+008up.mdl",vec(4128,16,-3808),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_2lt_279pg_+0256x-0128x+008up.mdl",vec(5408,656,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a1rt_4rt_right_0pg_+1120x+0608x0000.mdl",vec(6144,304,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/straights/s1536_4lt_0pg_+1536x-1536x0000.mdl",vec(8800,-1840,-3800),ang(0,-90,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a0fw_4rt_right_0pg_+1568x+0640x0000.mdl",vec(10368,-2480,-3800),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s2048_0fw_0pg_+2048x00000x0000.mdl",vec(10368,-2480,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/straights/s0384_0fw_0pg_+0384x00000x0000.mdl",vec(12416,-2480,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/arcs/r2048/a1lt_2lt_left_0pg_+0608x-0224x0000.mdl",vec(6144,496,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/arcs/r3072/a0fw_2lt_left_0pg_+1504x-0352x0000.mdl",vec(8512,1200,-3800),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0256_2lt_0pg_+0256x-0128x0000.mdl",vec(6752,720,-3800),ang(0,-180,0),1,
+            "models/trakpak3_rsg/straights/s2048_0fw_0pg_+2048x00000x0000.mdl",vec(8512,1200,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0768_0fw_0pg_+0768x00000x0000.mdl",vec(10560,1200,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-2332,-6144,-3816),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0512_2rt_0pg_+0512x+0256x0000.mdl",vec(-3644,-5888,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-4188,-5376,-3816),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-5468,-5376,-3816),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-3612,-6144,-3816),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-684,-736,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-1960,-736,-3808),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_1rt_0pg_+0256x+0064x0000.mdl",vec(-1896,-576,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s1024_1rt_0pg_+1024x+0256x0000.mdl",vec(-2920,-320,-3800),ang(0,180,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-2600,-224,-3808),ang(0,0,0),1,
+            "models/trakpak3_rsg/straights/s0256_0fw_312pg_+0256x00000x+008up.mdl",vec(-3880,-224,-3808),ang(0,-180,0),1
+        ),table(array(7,1,2,8,3,4,9,5,6,10,7,8,11,9,10,12,11,12),
+        array(vec(-12607,4042,2067),4,0,vec(-12702,4106,2067),4,1,vec(-12705,-4724,2067),5,1,vec(-12705,-4724,2067),6,1,vec(-12800,-4744,2067),5,0,vec(-12603,-4624,2067),6,0),
+        table(),0)
+        
+        
+        )
+    
+    T = table()
+    L = 0
+    
+    Tot = 1
+    
+    for(X = 1,SP:count()/2){
+        
+        for(Y = 1,SP[X*2,table][2,array]:count()/3){
+            
+            holoCreate(Tot,SP[X*2,table][2,array][Y*3-2,vector],vec(2),ang(0,90,0),vec(255,0,0),"cone")
+            Tot++
+            
+        }
+        
+    }
+    
+    Adder = array()
+    
+    
+}
+
+if(Respawnify){
+    
+    interval(100) 
+
+    while(propCanCreate() & perf() & X <= SP:count()/2){
+        
+        while(propCanCreate() & perf() & Y <= SP[X*2-1,array]:count()/S){
+            
+            if(First == 2 & !P[Count*3+1,entity]:isValid()){
+                
+                P = P:add(table(propSpawn(SP[X*2-1,array][(Y*S)-(S-1),string],1),X,Y))
+                ET = P[P:count()-2,entity]
+                
+            }elseif(!P[Count*3+1,entity]:isValid()){
+                
+                ET = P[Count*3+1,entity] = propSpawn(SP[X*2-1,array][(Y*S)-(S-1),string],1)
+                
+            }else{
+            
+                ET = P[Count*3+1,entity]
+                
+            }
+                
+            ET:setPos(SP[X*2-1,array][(Y*S)-(S-2),vector])
+            ET:setAng(SP[X*2-1,array][(Y*S)-(S-3),angle])
+            ET:propFreeze(1)
+            noCollideAll(ET,!(C*SP[X*2-1,array][(Y*S)-(S-4),number]))
+            ET:propShadow(0)
+            ET:setSkin(SP[X*2,table][4,number])
+            Count++
+            Y++
+            Adder = Adder:add(array(ET))
+            
+        }
+        
+        if(Y > SP[X*2-1,array]:count()/S){
+            
+            Y = 1
+            
+            for(Y = 1,SP[X*2,table][3,table]:count()){
+                
+                for(Z = 1,(SP[X*2,table][3,table][Y,array]:count()-1)/2){
+                    
+                    Adder[SP[X*2,table][3,table][Y,array][1,number],entity]:setSubMaterial(SP[X*2,table][3,table][Y,array][(Z*2),number],SP[X*2,table][3,table][Y,array][(Z*2)+1,string])
+                    
+                }
+                
+            }
+                
+            for(Y = 1,SP[X*2,table][1,array]:count()/3){
+                
+                T[SP[X*2,table][1,array][Y*3-2,number],array] = array(0,Adder[SP[X*2,table][1,array][Y*3-1,number],entity],Adder[SP[X*2,table][1,array][Y*3,number],entity])
+                
+            }
+                
+            X++
+            Adder = array()
+            
+        }
+        
+    }
+    
+    if(X > SP:count()/2){
+        
+        print(E:getName()+": Finished spawning track.")
+        Respawnify = 0
+        Count = 0
+        First = 1
+        X = 1
+        Y = 1
+        
+    }
+    
+}else{    
+
+    interval(500)
+    
+    InB = In:clone()
+    In = array(T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12)
+    
+    while(Z <= SP:count()/2){
+        
+        while(Y <= SP[Z*2,table][2,array]:count()/3){
+            
+            R = rangerOffset(100,SP[Z*2,table][2,array][Y*3-2,vector],vec(0,0,1))
+            
+            if(R:hit()){
+                
+                In[SP[Z*2,table][2,array][Y*3-1,number],number] = SP[Z*2,table][2,array][Y*3,number]
+                
+            }
+            
+            Y++
+            
+        }
+        
+        if(Y > SP[Z*2,table][2,array]:count()/S){
+            
+            Y = 1
+            Z++
+            
+        }
+        
+    }
+    
+    if(Z > SP:count()/2){
+        
+        Z = 1
+        Todo = array()
+        
+        if(First){
+            
+            for(Z = 1,In:count()){
+                
+                Todo = Todo:add(array(Z))
+                
+            }
+            
+            First = 0
+            
+        }else{
+        
+            Todo = compare(InB,In)
+            
+        }
+        
+        if(Todo:count()){
+        
+            for(Z = 1,Todo:count()){
+                
+                if(In[Todo[Z,number],number]){
+                    
+                    T[Todo[Z,number],array][2,entity]:setAlpha(10)
+                    noCollideAll(T[Todo[Z,number],array][2,entity],1)
+                    T[Todo[Z,number],array][3,entity]:setAlpha(255)
+                    if(C){noCollideAll(T[Todo[Z,number],array][3,entity],0)}
+                    
+                }else{
+                    
+                    T[Todo[Z,number],array][3,entity]:setAlpha(10)
+                    noCollideAll(T[Todo[Z,number],array][3,entity],1) 
+                    T[Todo[Z,number],array][2,entity]:setAlpha(255)
+                    if(C){noCollideAll(T[Todo[Z,number],array][2,entity],0)}
+                    
+                }
+                
+            }
+            
+            Todo = array()
+            
+            I1 = In[1,number]
+            I2 = In[2,number]
+            I3 = In[3,number]
+            I4 = In[4,number]
+            I5 = In[5,number]
+            I6 = In[6,number]
+            I7 = In[7,number]
+            I8 = In[8,number]
+            I9 = In[9,number]
+            I10 = In[10,number]
+            I11 = In[11,number]
+            I12 = In[12,number]
+            I13 = In[13,number]
+            I14 = In[14,number]
+            I15 = In[15,number]
+            I16 = In[16,number]
+            I17 = In[17,number]
+            I18 = In[18,number]
+            I19 = In[19,number]
+            I20 = In[20,number]
+            I21 = In[21,number]
+            I22 = In[22,number]
+            I23 = In[23,number]
+            I24 = In[24,number]
+            I25 = In[25,number]
+            I26 = In[26,number]
+            I27 = In[27,number]
+            I28 = In[28,number]
+            I29 = In[29,number]
+            I30 = In[30,number]
+            I31 = In[31,number]
+            I32 = In[32,number]
+            I33 = In[33,number]
+            I34 = In[34,number]
+            I35 = In[35,number]
+            I36 = In[36,number]
+            I37 = In[37,number]
+            
+        }
+        
+    }
+
+}
+
+
+if(last() | (O == lastSpoke() & O:lastSaid():lower():trim() == ".dupeset" & chatClk(O))){
+    
+    propDeleteAll()
+    hideChat(1)
+    X = (SP:count()/2)+1
+    
+}
+
+if(
+(O == lastSpoke() & O:lastSaid():lower():trim() == ".respawnify" & chatClk(O)) |
+(lastSaid():lower():find("trac") & lastSaid():lower():find("brok") & chatClk())
+){
+
+    Respawnify = 1
+    
+}
+
+if(O == lastSpoke() & O:lastSaid():lower():trim() == ".telepoof" & chatClk(O)){
+    
+    E:setPos(O:aimPos()+vec(0,0,10))
+    E:setAng(ang(0,0,0))
+    E:propFreeze(1)
+    hideChat(1)
+    
+}
+

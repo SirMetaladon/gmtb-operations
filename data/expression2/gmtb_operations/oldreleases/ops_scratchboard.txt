@@ -1,0 +1,187 @@
+@name OPS Scratchboard
+
+TODO:
+nail phantom interacts bug - I think I got it, but no time to test tonight- DID NOT GET IT
+make auto printout for posting in FC&N + automatically save data - automatic awarding
+explore crash bug at long running times (???) also happens sometimes during testing
+tracker e2 can explode - likely tracking too many cars in 1 tick
+make coming and going jobs different colors (and/or figure out multicolor tags)
+system that shows how long it took for cars to reach destinations
+automatic job guessing (system that determines who the YM is)
+scoring takes into account time spent on the server (and displays this) - make sure to make it time interacting with cars w/ leniency instead of just "online" time - "Productivity" score
+compile data from old ops sessions to determine baselines
+somehow make downtown a 2-engine job (transfer and local?)
+improve routing for blocked empties to prevent constant fishing out of loop cars for outbounds (logs and coal) - solve with "sector" system that can confine coal to a dedicated loop
+make jobs version for aoh and commonwealth
+job board suggest what needs to be done - needs to not count cars recently interacted with
+make job board differentiate between delivered, currently/recently worked cars, and idle cars
+make job 804 (laz job) and 501 (north shorts) more fun
+spawn specific job via roller - use sector system?
+random job spawner via "what is currently lacking"
+split out outbound cars to towns via sub-yard (sargeant, yale, south, etc for memphis)?
+staging rebuild: generic "inbound transfer" and "inbound block" trains with randomized pre & post destinations picked from list
+figure out multijob system to give YM a choice of trains to send cars with (mainline only)
+make blocking system at point of origination for trains where the YM is given instructions on the best way to block
+randomized trains > ".train 10 southbound" > picks from the "southbound" weighted precompiled roller of southbound yard-bound jobs (transfers, hotshots, etc) (maybe not one that currently exists in the world)
+give ym a score based on blocking effectiveness (and maybe switch crews returning to the yard, score consist when any 1 car enters the yard and give all cars the "blocked" marker until they are all reclassed
+preblock trains based on job (might involve generating the car route at a different step of the process, as currently it's too late to sort the cars on)
+make a record of time per player spent doing individual jobs
+for some reason records of spawns and deletions are innacurate - make system wait for confirmation before sending next ping
+tropicana clarity + remarking?
+make a list of offmap industries and key on-map industries to them with types so coal cars only go to specific power plants and logs only go to specific mills etc
+make system capable of pulling directly from sublet industries
+make e2 output an error message when data in the config looks wrong (no box sides, no name, etc)
+make temporary system that allows you to force starting train when spawning > picking a type of inbound train (but might not work with routing?)
+automatically generated YM outline of what trains come in and out (and maybe what they should prepare for given the state of the railroad)
+make "being an interchange" not overwrite "work", but the other way around; define interchange percentage, then you can change or zero out various values within it and it will automatically recalculate
+make it like the original where it calculates what you can get to with the current job then spawns cars and types based on that
+make e2 command that prints available industry and yard tracks to spawn on
+wolfram local industries & redwall grain mill
+figure out how to make staging trains fun
+make e2 change physical look of car when loaded or unloaded (holos or bodygroups)
+501 reclassifying odd directly to mainline trains
+make holo hitboxes togglable while running
+make .clarify usable by everyone (in fact it'd be cool to periodically run it on cars recently classified)
+remove pseudocode
+remove nonfunctional bits
+automatically show colors that are too close to each other for jobs and tracks
+make "retag" system set route length to a specific point along the route instead of deleting info so you don't get double-retags and you can rewind to see where a car came from
+data tracker bugs out when desynced and goes into a mad dash
+make SCC more substantial and less switching
+system that looks at outbound traffic and picks inbounds to satisfy it (block swaps)
+move even more traffic to Wolfram (make RWD larger? make RFL or KHD come from Wolfram? More staging trains?)
+make it so entering staging trains have traffic not destined to immediately leave the yard and go elsewhere (IE GDT isn't 75% cars for wolfram and vice versa)
+only allow very specific staging trains to have cross-map run
+make system that detects what cars can be reached from this point and generates inbound trains accordingly
+command that
+Make interchanges that behave like normal industries with offmap -1 (use overwritten work only)
+Make exceptions list for interchange automatic multipliers for cars designed to cycle between special industries and staging; they can use  existing routes and trains, but they stay isolated.
+Train presets; track, length, destinations and blocking order, starting train vs cont. run, weight, how many trains between runs, etc
+Will need train queuing system
+Extended start up sequence for ops that queues a whole bunch of trains that can be scaled by some total target car count that also starts the session timer. 
+Figure out how to get trains that terminate in staging to work correctly (IE all pickups go to end of line but trains elsewhere on the railroad don't route to the local just to get to the end)
+Make preset spawning allow multiple tracks, with length / special case routing to make length of spawning relative to track length
+When staging local goes to staging, use that as the trigger to spawn cars for return trip to reduce people starting at the wrong end
+Figure out e2 write to internet function so I can gather data remotely 
+Run staging routing deliver to roller in reverse to get car types for outbound trains
+Automatic updated checklists for locals so people know what to do
+Hold for Reclassification type to prevent oversized locals from going out
+Limit how many cars can be going to small industries either present or inbound at any given time.
+Use linear interpolation to interpolate between distances of cars on tracks ingame to lines on dispatch board so you can condense trains on to board space and give Dispatch an idea of what's on the railroad and where it is at track scale
+Do initial ranging check, then only compare local points to save resources. If farther than the standard distance, check more points. If a point cant be found within standard range, assume the car is derailed.
+ability to mask industries by making an intermediate location that trains get deleted at with industries on the far side used to draw cars and represent traffic (offmap industries)
+e2 still quotas when deleting lots of cars
+random chance to go to rip track when entering Wolfram or Rockfort then remark in 3 hours
+make modern RR's not spawn in old cars (BNSF before 1990s)
+make trilevel autoracks use 28inch wheels instead of 33inch
+cars get routed when deleted?
+cars getting remarked when thesystem "greens" them can crash the e2
+use previous scan from jobs currently active on scoreboard so no random anomalies happen
+temp cars count towards the carcount (bug)
+make mainline tracks in wolfram and rockfort reclass cars
+godfather needs markers and names
+fix kahuna confusion
+if we're ditching areas make sure to make a delineator for switching to industry color vs job color
+Much better idea; mark all of the new car cards as green , meaning, not mature; from there, await the carspawner to send a data signal associated with the command that was used to Spond, those specific cars, which should also be trackable via the tag, that switches all of the cars to be available for scanning, as opposed to not, when green is set to 1
+Yardmasters gets scored based on how many individual sub-blocks are in outgoing trains, as well as the time from the car becoming activated to the time the car leaves the yard
+Load suffix for specific ladings; reverting to a generic empty when unloaded?
+Instead of putting in a complex blocking procedure, just name individual trains that go to individual industrial locations and number them. 
+Make giant block model for displaying car triggers
+Blocking instructions data type for display
+Ditch current area system in favor of automatic zoneblocking type 1 + any spawn commands pick 1 track from that area that is unoccupied 
+Use warehouse wye as a staging track for Phoenix Steel transfer train
+Wolfram Service Tracks
+throw an error when zoneblock fails to find a location
+check for isolated excls > typos
+beware the fact that the tracker e2's command stack functionality currently replaces all commands with the next command instead of adding to stack
+sort carspawner cars again and ensure that models are added to the bottom list
+hank automatic jig for determining bogie height
+convert cars to 33inch wheels - msts stuff
+bug: when cars are deleted if someone spawns a prop with the same entity id it can trick the system into thinking the car still exists
+nodef is broken somehow
+"tapemeasure spawning" for CCC; designate location of spawning, as people coouple to first car and pull out train cars are spawned behind them
+bug with spawning multiple large trains fast; overlap oddities
+
+
+
+
+    #how the command to send back the data for car labeling works (carspawner side)
+    #markthis = table(array(Frame:id(),Bogie1:id(),Bogie2:id()),Instr[1,table][7,string])
+    
+    #[carspawner code demonstrating how the train command turns into spawn instructions
+    if(Data[1,string] == "summon"){
+        
+        CommandStack:pushString(Time+" summon via populate")
+        Instr:pushTable(table("goto",Data[2,vector],Data[3,number],1))
+        
+     }else{
+    
+        Instr:pushTable(table("clean"))
+        Instr:pushTable(table("sp",Data[1,string],Data[2,vector],Data[3,string]))
+        
+        CommandStack:pushString(Time+" clean via pop")
+        CommandStack:pushString(Time+" pop sp "+Data[1,string])   
+        
+    }]#
+    
+    
+    
+    #[
+    
+    pseudocode  
+    
+    for selecting random cars in the wild:
+    select a location to go to and car type (boxcar, coal, etc)
+    click on car: override path with direct route to location, override type to type
+    
+    spawning procedure:
+    
+    player input or trigger by lack of cars in circulation
+    
+    give location and train type
+    
+    e2 determines roll of car types
+    make stack of picked car types (repeat rolling several times)
+    for each car, determine a next location, then create route 
+    
+    if location is singular:
+    sort cars into blocks
+    else:
+    roll for every "industry" track (preset)
+    
+    compile all orders into 1 massive instruction, including teleports
+    send order to carspawner and wait for carspawner to return "donezo" signal before considering new spawns (queue player orders?)
+    
+    as each car is created:
+        compare current car location to destination
+        create a route
+        mark car
+        save car data
+        
+    each tick:
+        scan all cars for being inside bounding boxes
+        if yes, advance marker to next location
+        if no more locations:
+            if car is at an outbound location, delete it
+            else find a new target and generate a route
+            
+            
+    industry data structure:
+    parent, name, color, bouding box a, bounding box b, turnaround time, spawner pos, spawner ang, array of car type / weight pairs
+    
+    
+    how to determine a next location:
+    
+    for every industry in the map, add it to the roller if it has capacity for the selected car type
+    return the result of a weighted roll for location based on above
+    
+    
+    
+    note: create reverse lookup for locations IE given parent return children
+    maybe this can be used to auto-fill train types and traffic patterns? mmm
+    
+    
+    idea: to fix industry routing problem: industries are just spawning tracks, create normal locations AND separate routing table (unrelated to locations) for determining destinations, then just have it reference back to the "combined zone" for each industry
+    ie: 2 spawning location tracks separate, 1 route-to location entity and combined trigger volume (like any other location), and auto-generated routing data based on industry input
+    
+    ]#

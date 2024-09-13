@@ -1,0 +1,448 @@
+@name OPS Score e2 - Lifetime Tally
+@inputs MainEntityList:table
+@persist Data:table Scores:table Overall FoundChk:table Atype Btype ExcludedEntities:string Recieved:table HID FoundPrev:table MainListKeys:array CommandStack:table IncrementX Deleted Spawned Trains Print:array Names:table StartTime ScanInterval X
+@outputs Miles Scores:table Spawned Deleted Trains Names:table Time CommandStack:table
+
+@inputs Inc Signal:table
+@persist Rsp
+@outputs Rsp
+@trigger Inc
+
+if(dupefinished()){reset()}
+
+
+if(first()){
+    
+    #[
+    ideas for things to track:
+    average time between remarking
+    average time between end destinations
+    average handoff time?
+    cars delivered per hour (per player, per job)
+    how long has a player been operating (first connected to a car to most recent car movement)
+    
+    ]#
+    
+    function flash(E:entity,V:vector){
+        
+        holoCreate(HID,E:pos(),vec(1.03),E:angles(),V,E:model())
+        holoMaterial(HID, "debug/debugdrawflat")
+        holoAlpha(HID,100)
+        holoParent(HID,E)
+        HID++
+        
+    }
+    
+    StartTime = systime()
+    
+    Scores["Total",table] = table()
+    Names["Total",string] = "Total"
+    
+    Rsp = 0
+    
+    IncrementX = 1
+    
+    ScanInterval = 3000
+    
+    runOnChat(1)
+    
+    function flash(E:entity,V:vector){
+        
+        holoCreate(HID,E:pos(),vec(1.03),E:angles(),V,E:model())
+        holoMaterial(HID, "debug/debugdrawflat")
+        holoAlpha(HID,100)
+        timer("holodelete|"+HID,750)
+        holoParent(HID,E)
+        HID++
+        
+    }
+    
+    function number safe(){ #Function that determines if the current iteration is out of processing time
+        
+        return minquota() > 3000
+ 
+    }
+    
+    timer("CommandStack",500)
+    timer("checknames",200)
+    CommandStack = table(table("command" = "scan_1"))
+    
+    function string get_operators(S:string){
+        
+        #input = entity ID in string format
+        
+        local FndBuffer = table()
+        
+        #If you've already found this car in a previous scan, copy that data and end it
+ 
+        if(FoundChk[S,string] != ""){
+            
+            Btype++
+            return FoundChk[S,string]
+            
+            
+        }else{
+        
+            local S2 = "|"
+            local ConnectedEntities = entity(S:toNumber()):getConnectedEntities("rope","axis")
+            
+            Atype++
+            
+            #local En = array(entity(S:toNumber()))
+            
+            for(X = 1,ConnectedEntities:count()){
+                
+                O = ConnectedEntities[X,entity]:owner():steamID()
+                
+                if(!S2:find("|"+O+"|") & !ExcludedEntities:find(ConnectedEntities[X,entity]:id():toString())){
+                    
+                    #flash(ConnectedEntities[X,entity],vec(255,0,0))
+                    
+                    S2 = S2 + O+"|"
+
+                }
+                
+                FndBuffer[ConnectedEntities[X,entity]:id():toString(),number] = 1
+                
+            }
+            
+            ListOfFoundOwners = S2:sub(2):replace("|"," "):trim():replace(" ","|")#:explode("|")
+            
+            if(ListOfFoundOwners == ""){
+                
+                ListOfFoundOwners = "none"
+                
+            }
+            
+            K = FndBuffer:keys()
+            
+            for(X = 1,K:count()){
+                
+                FoundChk[K[X,string],string] = ListOfFoundOwners
+                
+            }  
+            
+            if(ListOfFoundOwners != "none"){
+                
+                for(X = 1,K:count()){
+                    
+                    FoundPrev[K[X,string],string] = ListOfFoundOwners
+                    
+                }  
+                
+            }
+            
+            return ListOfFoundOwners
+            
+        }
+        
+        
+    }
+    
+    
+}
+
+
+if(clk("CommandStack")){
+    
+    timer("CommandStack",100)
+    
+    if(CommandStack[1,table]["command",string] == "scan_1" & safe()){
+
+        MainListKeys = MainEntityList:keys()
+        
+        FoundChk = table()
+        
+        ExcludedEntities = "|"
+        
+        CommandStack = table(table("command" = "scan_2"))
+        timer("scan",ScanInterval)
+        
+        X = 1
+        
+    }
+    
+    if(CommandStack[1,table]["command",string] == "scan_2" & safe()){
+    
+        while(X <= MainListKeys:count() & safe()){
+            
+            local CarEntities = MainEntityList[MainListKeys[X,string],table]["ents",array]
+            
+            for(Y = 1,CarEntities:count()){
+                
+                ExcludedEntities = ExcludedEntities + CarEntities[Y,number]:toString() + "|"
+            
+            }
+            
+            X++
+            
+        }
+        
+        if(X > MainListKeys:count()){
+        
+            CommandStack = table(table("command" = "scan_3"))
+            X = 1
+            
+        }
+        
+    }
+    
+    if(CommandStack[1,table]["command",string] == "scan_3" & safe()){
+    
+        while(X <= Scores:keys():count() & safe()){
+                
+            P = Scores:keys()[X,string]
+            
+            if(findPlayerBySteamID(P):isValid()){
+            
+                Scores[P,table]["connected",number] = Scores[P,table]["connected",number] + (ScanInterval/1000)
+                
+            }
+            
+            X++
+            
+        }
+        
+        if(X > Scores:keys():count()){
+            
+            CommandStack = table(table("command" = "scan_main"))
+            X = 1
+            
+        }
+        
+    }
+
+    if(CommandStack[1,table]["command",string] == "scan_main" & safe()){
+ 
+        while(IncrementX <= MainListKeys:count() & safe()){
+            
+            local FrameID = MainListKeys[IncrementX,string]
+            
+            if(FrameID:toNumber() != 0 & MainEntityList[FrameID,table]["NotTracking",number] != 1){
+                
+                local Pos = entity(FrameID:toNumber()):pos()
+                
+                if(Pos != vec(0)){
+                    
+                    P = get_operators(FrameID)
+                    
+                    if(!Data[FrameID,array]:count()){
+                        
+                        Data[FrameID,array] = array(0,Pos)
+                        
+                    }
+                    
+                    local D = Pos:distance(Data[FrameID,array][2,vector])
+                    
+                    if(P != "none"){
+                    
+                        local P1 = P:explode("|")
+                        
+                        for(Y = 1,P1:count()){
+                            
+                            if(!Scores[P1[Y,string],table]:count()){
+                                
+                                Scores[P1[Y,string],table] = table()
+                            }
+                            
+                            Scores[P1[Y,string],table]["dist",number] = Scores[P1[Y,string],table]["dist",number] + D
+                            Scores["Total",table]["dist",number] = Scores["Total",table]["dist",number] + D
+                            
+                        }
+                        
+                    }
+                    
+                    Miles = Miles + (D/(12*5280))
+                    
+                    Data[FrameID,array][1,number] = Data[FrameID,array][1,number] + D
+                    Data[FrameID,array][2,vector] = Pos
+                    
+                }
+                
+            }
+            
+            IncrementX++
+            
+        }
+        
+        if(IncrementX > MainListKeys:count()){
+            
+            IncrementX = 1
+            CommandStack:remove(1)
+            
+        }
+        
+    }
+    
+}
+
+if(clk("scan")){
+    
+    CommandStack = table(table("command" = "scan_1"))
+    
+}
+
+if(clk("checknames")){
+    
+    local PL = players()
+    
+    for(X = 1,PL:count()){
+    
+        P = PL[X,entity]:name()+":"
+        
+        if(P != ":"){Names[PL[X,entity]:steamID(),string] = P}
+        
+    }
+    
+    timer("checknames",10000)
+    
+}
+
+if(Inc < Rsp & !first()){
+    
+    print("start")
+    
+    local T = Signal
+    
+    if(T["name",string] == "reroute"){
+        
+        if(T["where",string] != "all" & T["where",string] != "all2"){
+            
+            local P = FoundPrev[T["ent",string],string]
+            
+            if(P != "none" & P != ""){
+                
+                local P1 = P:explode("|")
+                
+                for(Y = 1,P1:count()){
+                    
+                    if(!Scores[P1[Y,string],table]:count()){
+                        
+                        Scores[P1[Y,string],table] = table()
+                    }
+                    
+                    Scores[P1[Y,string],table]["deliveries",number] = Scores[P1[Y,string],table]["deliveries",number] + 1
+                    Scores["Total",table]["deliveries",number] = Scores["Total",table]["deliveries",number] + 1
+                    
+                    if(T["isoffmap",number]){
+                        
+                        Scores[P1[Y,string],table]["offmap",number] = Scores[P1[Y,string],table]["offmap",number] + 1
+                        Scores["Total",table]["offmap",number] = Scores["Total",table]["offmap",number] + 1
+                        
+                    }
+                    
+                    if(T["count",number] == 1){
+                        
+                        Scores[P1[Y,string],table]["final",number] = Scores[P1[Y,string],table]["final",number] + 1
+                        Scores["Total",table]["final",number] = Scores["Total",table]["final",number] + 1
+                        
+                    }
+                    
+                }
+                
+            }
+              
+        }
+        
+    }elseif(T["name",string] == "deleted"){
+        
+        Deleted = Deleted + 1
+        
+        local P = FoundPrev[T["ent",string],string]
+            
+        if(P != "none" & P != ""){
+            
+            local P1 = P:explode("|")
+            
+            for(Y = 1,P1:count()){
+                
+                if(!Scores[P1[Y,string],table]:count()){
+                    
+                    Scores[P1[Y,string],table] = table()
+                }
+                
+                Scores[P1[Y,string],table]["deletions",number] = Scores[P1[Y,string],table]["deletions",number] + 1
+                Scores["Total",table]["deletions",number] = Scores["Total",table]["deletions",number] + 1
+                
+            }
+            
+        }
+        
+    }elseif(T["name",string] == "spawn"){
+        
+        Spawned = Spawned + 1
+        
+    }elseif(T["name",string] == "train"){
+        
+        Trains = Trains + 1
+        
+    }
+    
+    Rsp++
+    
+    print("end")
+    
+}
+
+if(chatClk(owner()) & lastSaid() == ".print"){
+    
+    hideChat(1)
+    
+    #[local K = Scores:keys()
+    
+    for(X = 1,K:count()){
+        
+        Print:pushString(K[X,string])
+        Print:pushString(Scores[K[X,string],table]:toString())
+        
+    }
+    
+    timer("print",250)]#
+    
+    
+    
+    
+    K = Scores:keys()
+
+    TR = "Miles = "+Miles+"\n Spawned = "+Spawned+"\n Trains = "+Trains+"\n Deleted = "+Deleted+"\n Hours = "+round(Time/(60*60),2)+"\n"
+    for(X = 1,K:count()){
+        R = K[X,string]
+        
+        TR = TR + R+"\n"+Names[R,string]+"\n"+Scores[R,table]:toString()
+        
+    }
+    
+    local D = date()
+    local RN = randint(100,999)
+    
+    print("Wrote File \"e2shared/opsdata-"+map()+"-"+D["month",number]+"-"+D["day",number]+"-"+D["year",number]+" "+RN+".txt\"")
+    
+    fileWrite(">e2shared/opsdata-"+map()+"-"+D["month",number]+"-"+D["day",number]+"-"+D["year",number]+" "+RN+".txt",TR)
+    
+}
+
+if(chatClk(owner()) & lastSaid() == ".ohboyherewego"){
+    
+    Rsp = 0
+    
+}
+
+if(clk("print")){
+    
+    if(playerCanPrint()){
+    
+        print(Print[1,string])
+        Print:remove(1)
+        
+    }
+    
+    if(Print:count()){
+        
+        timer("print",250)
+        
+    }
+    
+    
+}
+
+Time = systime() - StartTime

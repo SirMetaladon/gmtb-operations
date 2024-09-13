@@ -1,0 +1,683 @@
+@name Sir Metaladon's Route Computer [Sunset Gulch] old from engine
+@persist [PickupsWolfram PickupsDragonsRock PickupsTunnels PickupsRedwall PickupsKahuna PickupsDerrickson PickupsRockfort]:array
+@persist [SetoutsWolfram SetoutsDragonsRock SetoutsTunnels SetoutsRedwall SetoutsKahuna SetoutsDerrickson SetoutsRockfort]:array
+@persist Orders:table OrdersU:table Strings:array CurrentOrder OrdersC:table
+
+
+if(first()|dupefinished()){
+    
+    Thru = 0
+    Moves = 5
+    Starting = 0
+    Root = 2
+    Random = 5
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    runOnChat(1)
+    
+    D = M = table()
+    
+    Choices = PickupsWolfram = PickupsDragonsRock = PickupsTunnels = PickupsRedwall = PickupsKahuna = PickupsDerrickson = SetoutsRockfort = Print = array()
+    SetoutsDragonsRock = SetoutsTunnels = SetoutsRedwall = SetoutsKahuna = SetoutsDerrickson = PickupsU = SetoutsU = PickupsRockfort = SetoutsWolfram = array()
+    
+    CurrentOrder = 1
+    
+    Version = 0.8
+    
+    setName("Sir Metaladon's Route Computer [Sunset Gulch] V" + Version)
+    
+    WCoal = WWood = WBoxcar = WTanker = WScrap = WConcrete = WGrain = array("Wolfram Yard") #array("Wolfram Yard Track 1","Wolfram Yard Track 2","Wolfram Yard Track 3","Wolfram Yard Track 4","Wolfram Yard Track 5","Wolfram Yard Track 6")
+    GWood = array("Dragon's Rock Logging Siding")
+    TCoal = array("Gulch Tunnels Rotary Dumper")
+    TWood = array("Gulch Tunnels Lumber Track 1","Gulch Tunnels Lumber Track 2")
+    LTanker = array("Redwall Fuel Oil Loading Track","Redwall Fuel Oil Unloading Track")
+    KBoxcar = array("Kahuna Crystal Lake Trucking","Kahuna Atlantic Shipping Track 1","Kahuna Atlantic Shipping Track 2")
+    KScrap = array("Kahuna Scrapyard Siding")
+    KTanker = array("Kahuna Refueling Station","Kahuna Atlantic Shipping Track 1","Kahuna Atlantic Shipping Track 2")
+    DCoal = array("Derrickson Coal Plant Loading Track 1","Derrickson Coal Plant Loading Track 2","Derrickson Yard")
+    DBoxcar = array("Derrickson Yard","Derrickson Manufacturing Track")
+    DTanker = array("Derrickson Concrete Plant Chemicals Siding","Derrickson Yard","Derrickson Manufacturing Track")
+    DConcrete = array("Derrickson Concrete Plant Loading Track")
+    DGrain = array("Derrickson Grain Farm Siding")
+    RCoal = RWood = RBoxcar = ROil = RScrap = RTanker = RConcrete = RGrain = array("Rockfort Yard")#array("Rockfort Yard Track 1","Rockfort Yard Track 2","Rockfort Yard Track 3","Rockfort Yard Track 4")
+    
+    WolframN = table(WCoal,WWood,WBoxcar,WTanker,WScrap,WConcrete,WGrain)
+    Dragons_RockN = table(GWood)
+    TunnelsN = table(TCoal,TWood)
+    RedwallN = table(LTanker)
+    KahunaN = table(KBoxcar,KScrap,KTanker)
+    DerricksonN = table(DCoal,DTanker,DConcrete,DGrain,DBoxcar)
+    RockfortN = table(RCoal,RWood,RBoxcar,RTanker,RScrap,RConcrete,RGrain)
+    
+    Names = table(
+    
+    WolframN,
+    Dragons_RockN,
+    TunnelsN,
+    RedwallN,
+    KahunaN,
+    DerricksonN,
+    RockfortN
+    
+    )
+    
+    Wolfram = array("Coal","Wood","Boxcar","Tanker","Scrap","Concrete Hopper","Grain")
+    Dragons_Rock = array("Wood")
+    Tunnels = array("Coal","Wood")
+    Redwall = array("Tanker")
+    Kahuna = array("Boxcar","Scrap","Tanker")
+    Derrickson = array("Coal","Tanker","Concrete Hopper","Grain","Boxcar")
+    Rockfort = array("Coal","Wood","Boxcar","Tanker","Scrap","Concrete Hopper","Grain")
+    
+    Destinations = table(
+    
+    Wolfram,
+    Dragons_Rock,
+    Tunnels,
+    Redwall,
+    Kahuna,
+    Derrickson,
+    Rockfort
+    
+    )
+
+    for(X = 1,Thru){
+        
+        Pick = 1
+        
+        Rand = randint(1,Destinations[Pick,array]:count())
+        
+        PickType = Destinations[Pick,array][Rand,string]
+        
+        RandP = randint(1,Names[Pick,table][Rand,array]:count())
+        RandS = randint(1,Names[7,table][1,array]:count())
+        
+        for(N = 1,round(1 + root(Random,Root)-root(random(1,Random),Root))){
+        
+            PickupsU = PickupsU:add(array(PickType))
+            PickupsU = PickupsU:add(array(Names[Pick,table][Rand,array][RandP,string]))
+        
+            SetoutsU = SetoutsU:add(array(PickType))
+            SetoutsU = SetoutsU:add(array(Names[7,table][1,array][RandS,string]))    
+            
+        }
+        
+    }
+    
+    for(X = 1,Starting){
+        
+        D:clear()
+        M:clear()
+        
+        Choices = array()
+        D = D:add(Destinations)
+        M = M:add(Names)
+        
+        Pick = 1
+        
+        Rand = randint(1,Destinations[Pick,array]:count())
+
+        PickType = Destinations[Pick,array][Rand,string]
+        
+        for(N = 1,Pick){
+            
+            D:remove(1)
+            M:remove(1)
+            
+        }
+        
+        RandP = randint(1,Names[Pick,table][Rand,array]:count())
+        RandS = randint(1,Choices:count())
+        
+        for(N = 1,D:count()-1){
+            
+            for(Y = 1,D[N,array]:count()){
+                
+                if(D[N,array][Y,string] == PickType){
+                    
+                    Choices = Choices:add(array(M[N,table][Y,array][randint(1,M[N,table][Y,array]:count()),string]))
+                
+                }
+                   
+            }
+            
+        }  
+        
+        for(N = 1,round(1 + root(Random,Root)-root(random(1,Random),Root))){
+    
+            PickupsU = PickupsU:add(array(PickType))
+            PickupsU = PickupsU:add(array(Names[Pick,table][Rand,array][RandP,string]))
+            
+            SetoutsU = SetoutsU:add(array(PickType))
+            SetoutsU = SetoutsU:add(array(Choices[RandS,string]))
+            
+        }
+        
+    }
+    
+    for(X = 1,Moves){
+        
+        D:clear()
+        M:clear()
+        
+        Choices = array()
+        D = D:add(Destinations)
+        M = M:add(Names)
+        
+        Pick = randint(1,Destinations:count()-1)
+        
+        Rand = randint(1,Destinations[Pick,array]:count())
+        
+        PickType = Destinations[Pick,array][Rand,string]
+        
+        RandP = randint(1,Names[Pick,table][Rand,array]:count())
+        
+        RandS = randint(1,Choices:count())
+          
+        for(N = 1,Pick){
+            
+            D:remove(1)
+            M:remove(1)
+            
+        }
+        
+        for(N = 1,D:count()){
+            
+            for(Y = 1,D[N,array]:count()){
+                
+                if(D[N,array][Y,string] == PickType){
+                    
+                    Choices = Choices:add(array(M[N,table][Y,array][randint(1,M[N,table][Y,array]:count()),string]))
+                
+                }
+                   
+            }
+            
+        }  
+        
+        for(N = 1,round(1 + root(Random,Root)-root(random(1,Random),Root))){
+            
+            PickupsU = PickupsU:add(array(PickType))
+            PickupsU = PickupsU:add(array(Names[Pick,table][Rand,array][RandP,string]))
+            
+            SetoutsU = SetoutsU:add(array(PickType))
+            SetoutsU = SetoutsU:add(array(Choices[RandS,string]))
+            
+        }
+        
+    }
+    
+    
+    for(X = 1,PickupsU:count()/2){
+        
+        if(PickupsU[X*2,string]:find("Wolfram",0) == 1){
+
+            PickupsWolfram = PickupsWolfram:add(array(PickupsU[X*2-1,string]))
+            PickupsWolfram = PickupsWolfram:add(array(PickupsU[X*2,string]))
+        
+        }elseif(PickupsU[X*2,string]:find("Dragon's",0) == 1){
+            
+            PickupsDragonsRock = PickupsDragonsRock:add(array(PickupsU[X*2-1,string]))
+            PickupsDragonsRock = PickupsDragonsRock:add(array(PickupsU[X*2,string]))
+              
+        }elseif(PickupsU[X*2,string]:find("Gulch",0) == 1){
+            
+            PickupsTunnels = PickupsTunnels:add(array(PickupsU[X*2-1,string]))
+            PickupsTunnels = PickupsTunnels:add(array(PickupsU[X*2,string]))
+        
+        }elseif(PickupsU[X*2,string]:find("Redwall",0) == 1){
+            
+            PickupsRedwall = PickupsRedwall:add(array(PickupsU[X*2-1,string]))
+            PickupsRedwall = PickupsRedwall:add(array(PickupsU[X*2,string]))
+        
+        }elseif(PickupsU[X*2,string]:find("Kahuna",0) == 1){
+            
+            PickupsKahuna = PickupsKahuna:add(array(PickupsU[X*2-1,string]))
+            PickupsKahuna = PickupsKahuna:add(array(PickupsU[X*2,string]))
+        
+        }elseif(PickupsU[X*2,string]:find("Derrickson",0) == 1){
+            
+            PickupsDerrickson = PickupsDerrickson:add(array(PickupsU[X*2-1,string]))
+            PickupsDerrickson = PickupsDerrickson:add(array(PickupsU[X*2,string]))
+        
+        }
+        
+    }
+
+    
+    for(X = 1,SetoutsU:count()/2){
+        
+        if(SetoutsU[X*2,string]:find("Dragon's",0) == 1){
+            
+            SetoutsDragonsRock = SetoutsDragonsRock:add(array(SetoutsU[X*2-1,string]))
+            SetoutsDragonsRock = SetoutsDragonsRock:add(array(SetoutsU[X*2,string]))
+        
+        }elseif(SetoutsU[X*2,string]:find("Gulch",0) == 1){
+            
+            SetoutsTunnels = SetoutsTunnels:add(array(SetoutsU[X*2-1,string]))
+            SetoutsTunnels = SetoutsTunnels:add(array(SetoutsU[X*2,string]))
+        
+        }elseif(SetoutsU[X*2,string]:find("Redwall",0) == 1){
+            
+            SetoutsRedwall = SetoutsRedwall:add(array(SetoutsU[X*2-1,string]))
+            SetoutsRedwall = SetoutsRedwall:add(array(SetoutsU[X*2,string]))
+        
+        }elseif(SetoutsU[X*2,string]:find("Kahuna",0) == 1){
+            
+            SetoutsKahuna = SetoutsKahuna:add(array(SetoutsU[X*2-1,string]))
+            SetoutsKahuna = SetoutsKahuna:add(array(SetoutsU[X*2,string]))
+        
+        }elseif(SetoutsU[X*2,string]:find("Derrickson",0) == 1){
+            
+            SetoutsDerrickson = SetoutsDerrickson:add(array(SetoutsU[X*2-1,string]))
+            SetoutsDerrickson = SetoutsDerrickson:add(array(SetoutsU[X*2,string]))
+        
+        }elseif(SetoutsU[X*2,string]:find("Rockfort",0) == 1){
+            
+            SetoutsRockfort = SetoutsRockfort:add(array(SetoutsU[X*2-1,string]))
+            SetoutsRockfort = SetoutsRockfort:add(array(SetoutsU[X*2,string]))
+        
+        }
+        
+        
+    }
+    
+    OrdersU = table(
+    
+    PickupsWolfram,
+    SetoutsWolfram,
+    PickupsDragonsRock,
+    SetoutsDragonsRock,
+    PickupsTunnels,
+    SetoutsTunnels,
+    PickupsRedwall,
+    SetoutsRedwall,
+    PickupsKahuna,
+    SetoutsKahuna,
+    PickupsDerrickson,
+    SetoutsDerrickson,
+    PickupsRockfort,
+    SetoutsRockfort
+    )
+    
+    #[Strings = array(
+    "Wolfram",
+    "wolfram",
+    "Dragon's",
+    "dragon's",
+    "Tunnels",
+    "tunnels",
+    "Redwall",
+    "redwall",
+    "Kahuna",
+    "kahuna",
+    "Derrickson",
+    "derrickson",
+    "Rockfort",
+    "rockfort"
+    )]#
+    
+    N = 1
+    
+    for(X = 1,OrdersU:count()/2){
+
+        for(N = 1,OrdersU[X*2-1,array]:count()/2){
+            
+            Orders[X*2-1,array] = Orders[X*2-1,array]:add(array("Pickup " + OrdersU[X*2-1,array][N*2-1,string] + " from " + OrdersU[X*2-1,array][N*2,string]))
+ 
+        }
+        for(N = 1,OrdersU[X*2,array]:count()/2){
+            
+            Orders[X*2,array] = Orders[X*2,array]:add(array("Setout " + OrdersU[X*2,array][N*2-1,string] + " to " + OrdersU[X*2,array][N*2,string]))
+            
+        }
+        
+        if(Orders[X*2-1,array][1,string] != ""){
+            
+            OrdersC[N,array] = OrdersC[N,array]:add(Orders[X*2-1,array])
+            N++     
+            
+        }
+        
+        if(Orders[X*2,array][1,string] != ""){
+            
+            OrdersC[N,array] = OrdersC[N,array]:add(Orders[X*2,array])
+            N++     
+            
+        }
+
+    }
+
+
+
+    
+    
+}
+
+
+
+if(lastSaid():find("!work",0) == 1 & lastSpoke() == owner() & chatClk()){
+    
+    hideChat(1)
+    LS = lastSaid():explode(" ")
+    
+    if(LS[2,string] != ""){
+        
+        if(LS[2,string]:find("all",0) == 1 & LS[2,string]:find("wall",0) != 1){
+
+            for(X = 1,OrdersC:count()){
+                
+                for(N = 1,OrdersC[X,array]:count()){
+                    
+                    print(OrdersC[X,array][N,string])
+                    
+                }
+                
+            }
+            
+        }
+        
+        if(LS[2,string]:find("next",0) == 1 & chatClk()){
+            
+            print(" ")
+            CurrentOrder++
+            for(X = 1,OrdersC[CurrentOrder,array]:count()){
+                
+                print(OrdersC[CurrentOrder,array][X,string])
+                
+            }  
+            
+        }
+        if(LS[2,string]:find("last",0) == 1 & chatClk()){
+            
+            print(" ")
+            CurrentOrder--
+            for(X = 1,OrdersC[CurrentOrder,array]:count()){
+                
+                print(OrdersC[CurrentOrder,array][X,string])
+                
+            } 
+            
+        }
+        
+        CurrentOrder = clamp(CurrentOrder,1,Orders:count())
+        
+    }else{
+        
+        print(" ")
+        for(X = 1,OrdersC[CurrentOrder,array]:count()){
+                
+            print(OrdersC[CurrentOrder,array][X,string])
+                
+        } 
+        
+    }
+        
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#[
+for(X=1,ListTwns:count()){
+         
+    for(N=1,Industries[ListTwns[X,number],array]:count()/2){
+    
+        Pick = randint(1,(Industries[ListTwns[X,number],array]:count()/2)+1-N)
+        
+        
+        
+        
+        ListInd = ListInd:add(array(Industries[ListTwns[X,number],array][Pick*2,number]))
+        
+        
+        
+        
+        
+        Towns:remove(Pick)
+        
+    }
+    
+}
+    
+
+
+
+Length = 10
+Deliveries = 25
+Destinations = 3
+
+Wolfram = array(
+    
+    "all",
+    25,
+        
+    "all",
+    21,
+        
+    "all",
+    29
+        
+)
+
+Industries = table(
+    
+    Wolfram
+    
+)
+        
+Towns = array(
+
+1
+#[2,
+3,
+4,
+5,
+6]#
+#[
+Wolfram,
+Tunnels,
+Redwall,
+Kahuna,
+Derrickson,
+Rockfort]#
+#[
+)
+
+#
+
+
+
+Wolfram = array(
+        
+
+       
+)      
+    
+Dragons_Rock_Logging = array(
+        
+    "Lumber",
+    4,
+    1
+        
+) 
+    
+Rotary_Coal_Dumper = array(
+        
+    "Coal", 
+    10,
+    0
+        
+) 
+    
+Redwall_Fuel_Depot = array(
+        
+    "Oil",
+    10,
+    0
+        
+) 
+
+Tunnel_Lumberyard = array(
+        
+    "Lumber",
+    13,
+    0
+     
+)
+
+Kahuna_Oil = array(
+        
+    "Oil",
+    7,
+    1
+        
+)  
+
+Crystal_Lake_Trucking = array(
+        
+    "Boxcars",
+    4,
+    2
+        
+)  
+
+Atlantic_Shipping = array(
+        
+    "Boxcars",
+    11,
+    2
+     
+) 
+
+Scrapyard = array(
+        
+    "Scrap",
+    5,
+    0
+        
+) 
+
+NP_Fuel_Siding = array(
+        
+    "Oil",
+    7,
+    0
+        
+) 
+
+Derrickson_Coal = array(
+        
+    "Coal",
+    23,
+    1
+        
+) 
+
+Cement_Plant = array(
+        
+    "Cement",
+    8,
+    1,
+    
+    "LimeSlurry",
+    5,
+    0,
+    
+    
+    "Sand",
+    14,
+    0
+        
+) 
+
+Derrickson_Grain = array(
+        
+    "Grain",
+    26,
+    1
+          
+)
+
+Rockfort = array(
+        
+    "Intermodal",
+    21,
+    2,
+    
+    "Thru",
+    50,
+    2
+          
+) 
+
+
+Table = table(
+    Wolfram,
+    Dragons_Rock_Logging,
+    Rotary_Coal_Dumper,
+    Redwall_Fuel_Depot,
+    Tunnel_Lumberyard,
+    Kahuna_Oil,
+    Crystal_Lake_Trucking,
+    Atlantic_Shipping,
+    Scrapyard,
+    NP_Fuel_Siding,
+    Derrickson_Coal,
+    Cement_Plant,
+    Derrickson_Grain,
+    Rockfort
+)
+
+
+
+
+]#
+
+
+

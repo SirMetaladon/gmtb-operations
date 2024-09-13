@@ -1,0 +1,79 @@
+@name OPS Scratchboard
+
+TODO:
+fix car blocking (sort by job, then final destination)
+make auto printout for posting in FC&N + automatically save data - automatic awarding
+explore crash bug at long running times (???)
+make coming and going jobs different colors (and/or figure out multicolor tags)
+system that shows how long it took for cars to reach destinations
+automatic job guessing (system that determines who the YM is)
+scoring takes into account time spent on the server (and displays this) - make sure to make it time interacting with cars w/ leniency instead of just "online" time
+compile data from old ops sessions to determine baselines
+somehow make downtown a 2-engine job (transfer and local?)
+improve routing for blocked empties to prevent constant fishing out of loop cars for outbounds (logs and coal) - solve with "sector" system that can confine coal to a dedicated loop
+make jobs version for aoh and commonwealth
+job board suggest what needs to be done - needs to not count cars recently interacted with
+make job board differentiate between delivered, currently/recently worked cars, and idle cars
+make job 804 (laz job) and 501 (north shorts) more fun
+spawn specific job via roller - use sector system?
+random job spawner via "what is currently lacking"
+split out outbound cars to towns via sub-yard (sargeant, yale, south, etc for memphis)?
+staging rebuild: generic "inbound transfer" and "inbound block" trains with randomized pre & post destinations picked from list
+figure out multijob system to give YM a choice of trains to send cars with (mainline only)
+make blocking system at point of origination for trains where the YM is given instructions on the best way to block
+randomized trains > ".train 10 southbound" > picks from the "southbound" weighted precompiled roller of southbound yard-bound jobs (transfers, hotshots, etc) (maybe not one that currently exists in the world)
+give ym a score based on blocking effectiveness (and maybe switch crews returning to the yard, score consist when any 1 car enters the yard and give all cars the "blocked" marker until they are all reclassed
+preblock trains based on job (might involve generating the car route at a different step of the process, as currently it's too late to sort the cars on)
+make a record of time per player spent doing individual jobs
+for some reason records of spawns and deletions are innacurate - make system wait for confirmation before sending next ping
+tropicana clarity + remarking?
+make a list of offmap industries and key on-map industries to them with types so coal cars only go to specific power plants and logs only go to specific mills etc
+fix tracker bug by making inc feedback that triggers the next send (other system will simply sit on them until proven the transfer is complete)
+make system capable of pulling directly from sublet industries
+make e2 output an error message when data in the config looks wrong (no box sides, no name, etc)
+make temporary system that allows you to force starting train when spawning > picking a type of inbound train (but might not work with routing?)
+automatically generated YM outline of what trains come in and out (and maybe what they should prepare for given the state of the railroad)
+make "being an interchange" not overwrite "work", but the other way around; define interchange percentage, then you can change or zero out various values within it and it will automatically recalculate
+make it like the original where it calculates what you can get to with the current job then spawns cars and types based on that
+make e2 command that prints available industry and yard tracks to spawn on
+interacts score
+mark outbound exits with trains that leave via those locations
+bonk doesn't work on cars on the final destination
+wolfram local industries & redwall grain mill
+figure out how to make staging trains fun
+make e2 change physical look of car when loaded or unloaded (holos or bodygroups)
+hank bulkhead and tanker incorrect height
+stahlburg lake not working
+501 reclassifying odd directly to mainline trains
+make holo hitboxes togglable while running
+make .clarify usable by everyone (in fact it'd be cool to periodically run it on cars recently classified)
+remove pseudocode
+remove nonfunctional bits
+automatically show colors that are too close to each other for jobs and tracks
+make "retag" system set route length to a specific point along the route instead of deleting info so you don't get double-retags and you can rewind to see where a car came from
+data tracker bugs out when desynced and goes into a mad dash
+differentiate kahuna and redwall "dodgers"
+board colors still not working
+make SCC more substantial and less switching
+system that looks at outbound traffic and picks inbounds to satisfy it (block swaps)
+move even more traffic to Wolfram (make RWD larger? make RFL or KHD come from Wolfram? More staging trains?)
+make it so entering staging trains have traffic not destined to immediately leave the yard and go elsewhere (IE GDT isn't 75% cars for wolfram and vice versa)
+only allow very specific staging trains to have cross-map run
+make system that detects what cars can be reached from this point and generates inbound trains accordingly
+command that
+Make interchanges that behave like normal industries with offmap -1 (use overwritten work only)
+Make exceptions list for interchange automatic multipliers for cars designed to cycle between special industries and staging; they can use  existing routes and trains, but they stay isolated.
+Train presets; track, length, destinations and blocking order, starting train vs cont. run, weight, how many trains between runs, etc
+Will need train queuing system
+Extended start up sequence for ops that queues a whole bunch of trains that can be scaled by some total target car count that also starts the session timer. 
+Figure out how to get trains that terminate in staging to work correctly (IE all pickups go to end of line but trains elsewhere on the railroad don't route to the local just to get to the end)
+Make preset spawning allow multiple tracks, with length / special case routing to make length of spawning relative to track length
+When staging local goes to staging, use that as the trigger to spawn cars for return trip to reduce people starting at the wrong end
+Figure out e2 write to internet function so I can gather data remotely 
+Run staging routing deliver to roller in reverse to get car types for outbound trains
+Automatic updated checklists for locals so people know what to do
+Hold for Reclassification type to prevent oversized locals from going out
+Limit how many cars can be going to small industries either present or inbound at any given time.
+Use linear interpolation to interpolate between distances of cars on tracks ingame to lines on dispatch board so you can condense trains on to board space and give Dispatch an idea of what's on the railroad and where it is at track scale
+Do initial ranging check, then only compare local points to save resources. If farther than the standard distance, check more points. If a point cant be found within standard range, assume the car is derailed.
+

@@ -1,0 +1,120 @@
+@name opsconfig/tmo_saul_120822
+
+#This data is for the OPs e2, configuration to Sunset Gulch with the Custom Track dupe placed.
+
+#Format: Tracks["internalname",table] = table("internalparentname","Display Name",vec(color xyz),vec(trigger zone higher coords), vec(trigger lower coords),vec(carspawner start point),carspawner start angle,turnaround time in minutes,array of spawn options
+local IndTurn = 35 #How many minutes it takes to change a car to unloaded once it reaches an industry (reccomended 20-30 mins)
+
+
+Tracks = table()
+WorldMarks = table()
+#Industrial tracks - each one has a spawn location, and array of cars routed there (or is on the Interchanges list)
+
+Tracks["n1",table] = table("nstage","Runthrough North||Wolfram Yard",vec(72, 76, 115),vec(6900,-5000,402),vec(5300,-16262,192),0,vec(6504,-16149,298),2)
+Tracks["n2",table] = table("nstage","Runthrough North||Kansas City",vec(113, 127, 106),vec(6900,-5000,402),vec(5300,-16262,192),0,vec(6313,-15754,298),0)    
+Tracks["n3",table] = table("nstage","Runthrough North||St Louis",vec(137, 202, 86),vec(6900,-5000,402),vec(5300,-16262,192),0,vec(6119,-15773,298),0)
+Tracks["n4",table] = table("nstage","North Staging",vec(124, 34, 41),vec(6900,-5000,402),vec(5300,-16262,192),0,vec(5929,-15751,298),0)
+Tracks["n5",table] = table("nstage","North Staging",vec(124, 34, 41),vec(6900,-5000,402),vec(5300,-16262,192),0,vec(5735,-16162,298),0)
+
+Tracks["seadeep",table] = table("sea","Seabo|Corridor|Track",vec(247, 112, 228),vec(-4435,5125,-289),vec(-7532,4923,-490),0,vec(-4535,5024,-390),89,IndTurn,array(4,"general_boxcar"))
+Tracks["seatank1",table] = table("sea","Seabo|Tanker|Track",vec(112, 79, 44),vec(-4521,7685,-289),vec(-7713,6758,-490),0,vec(-4621,7584,-390),89,IndTurn,array(3,"tanker"))
+Tracks["seatank2",table] = table("sea","Seabo|Tanker|Track",vec(112, 79, 44),vec(-4521,7685,-289),vec(-7713,6758,-490),0,vec(-4633,7391,-390),90,IndTurn,array(3,"tanker"))
+
+
+Tracks["joebrewtank",table] = table("joe","Brewery|Tank Track",vec(169, 247, 113),vec(1800,15700,-594),vec(1400,13600,-794),-45,vec(1853,14172,-694),29,IndTurn,array(2,"chem"))
+
+Tracks["joebrew1",table] = table("joe","Bershire|Brewery",vec(23, 178, 39),vec(3585,15916,-594),vec(1261,15522,-794),0,vec(3485,15816,-694),90,IndTurn,array(1,"chem",1,"general_boxcar"))
+Tracks["joebrew2",table] = table("joe","Bershire|Brewery",vec(23, 178, 39),vec(3585,15916,-594),vec(1261,15522,-794),0,vec(3446,15622,-694),90,IndTurn,array(1,"chem",1,"general_boxcar"))
+
+Tracks["joeauto",table] = table("joe","Mackley|Autos",vec(209, 95, 206),vec(-2270,15200,-594),vec(-4052,15000,-794),-28,vec(-3952,14722,-694),-63,IndTurn,array(3,"boxcar_nonhigh"))
+
+Tracks["joefabric1",table] = table("joe","Spencer|Textiles",vec(109, 3, 189),vec(1663,13101,-594),vec(-1286,12547,-794),0,vec(1421,12999,-694),90,IndTurn,array(1,"general_boxcar"))
+Tracks["joefabric2",table] = table("joe","Spencer|Textiles",vec(109, 3, 189),vec(1663,13101,-594),vec(-1286,12547,-794),0,vec(1563,12648,-694),89,IndTurn,array(1,"general_boxcar"))
+
+Tracks["joeelec",table] = table("joe","Ironside|Electronics",vec(207, 11, 13),vec(-6194,12747,-594),vec(-7865,12547,-794),0,vec(-7765,12647,-694),-90,IndTurn,array(1,"general_boxcar"))
+
+
+Tracks["branchlog",table] = table("allind","SB Local|Branchwood|Log Camp",vec(81, 45, 244),vec(-12643,-3117,-381),vec(-13600,-7500,-582),0,vec(-13223,-6881,-482),-26,IndTurn,array(15,"log loaded"))
+
+
+#Tracks["anyload1",table] = table("scythe","Atlantic|Shipping",vec(198, 183, 140),vec(-1218,-9203,-903),vec(-5559,-9599,-1130),vec(-1318,-9303,-1014),90,IndTurn,array(3,"general_boxcar"))
+#Tracks["anyload2",table] = table("scythe","Atlantic|Shipping",vec(198, 183, 140),vec(-1218,-9203,-903),vec(-5559,-9599,-1130),vec(-1322,-9496,-1014),89,IndTurn,array(3,"general_boxcar"))
+
+Tracks["albertscrap",table] = table("albert","Bill Hells|Scrapyard",vec(89, 119, 68),vec(11325,3648,-1362),vec(11124,407,-1562),0,vec(11224,3548,-1462),-179,IndTurn,array(4,"scrap"))
+Tracks["albertbrew",table] = table("albert","Red Shed|Distillery",vec(167, 17, 51),vec(13600,0,-1498),vec(13200,-5000,-1698),27,vec(12085,-5739,-1598),-27,IndTurn,array(1,"chem",1,"general_boxcar"))
+
+
+Tracks["y1",table] = table("scythe","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0,vec(-14439,7879,-830),-171,0,array())
+Tracks["y2",table] = table("scythe","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0,vec(-14601,7998,-831),180,0,array())
+Tracks["y3",table] = table("scythe","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0,vec(-14792,8109,-838),-179,0,array())
+Tracks["y4",table] = table("scythe","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0,vec(-14983,8889,-838),180,0,array())
+Tracks["y5",table] = table("scythe","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0,vec(-15175,9607,-838),180,0,array())
+
+
+Tracks["anysteel",table] = table("infra","Warehouse|Company",vec(210, 34, 81),vec(11124,15405,-1601),vec(4920,14502,-1802),0,vec(5020,15305,-1702),-90,IndTurn,array(2,"steel",2,"general_boxcar"))
+
+Tracks["anymisc",table] = table("infra","Transload|Track",vec(181, 183, 134),vec(11755,10441,-1770),vec(10476,8391,-1970),0,vec(11655,8491,-1870),0,IndTurn,array(1,"tanker",1,"general_boxcar"))
+
+Tracks["anydock1",table] = table("infra","Dock|Complex",vec(109, 170, 141),vec(11921,11237,-1770),vec(9495,10524,-1970),0,vec(11820,10624,-1870),90,IndTurn,array(2,"general_boxcar",1,"steel"))
+Tracks["anydock2",table] = table("infra","Dock|Complex",vec(109, 170, 141),vec(11921,11237,-1770),vec(9495,10524,-1970),0,vec(11821,11136,-1870),89,IndTurn,array(2,"general_boxcar",1,"steel"))
+
+
+Tracks["lazmmm1",table] = table("allind","SB Local|Madison Material|Associates",vec(185, 242, 161),vec(4393,1357,-1802),vec(1759,-2712,-2002),0,vec(2366,-2612,-1902),-27,IndTurn,array(4,"general_boxcar"))
+Tracks["lazmmm2",table] = table("allind","SB Local|Madison Material|Associates",vec(185, 242, 161),vec(4393,1357,-1802),vec(1759,-2712,-2002),0,vec(1859,-2475,-1902),-24,IndTurn,array(4,"general_boxcar"))
+
+
+Tracks["s1",table] = table("sstage","Local Turn South",vec(199, 62, 203),vec(6605,-5460,-1906),vec(-2158,-12114,-2106),0,vec(6120,-12014,-2006),-1)
+Tracks["s2",table] = table("sstage","Transfer South||Goldstone Yard",vec(180, 177, 65),vec(6605,-5460,-1906),vec(-2158,-12114,-2106),0,vec(-2058,-11024,-2006),-89)
+Tracks["s3",table] = table("sstage","Direct Tranfer||Fireside Yard",vec(13, 160, 118),vec(6605,-5460,-1906),vec(-2158,-12114,-2106),0,vec(6505,-11228,-2006),0)
+Tracks["s4",table] = table("sstage","South Staging",vec(47, 30, 116),vec(6605,-5460,-1905),vec(-2158,-12114,-2106),0,vec(2605,-10833,-2006),-90)
+Tracks["s5",table] = table("sstage","South Staging",vec(47, 30, 116),vec(6605,-5460,-1906),vec(-2158,-12114,-2106),0,vec(5928,-11577,-2006),1)
+
+
+Tracks["sea",table] = table("allind","NB Local|Seaboard|Tropicana Plant",vec(80, 155, 118),vec(-8928,7999,-300),vec(-10733,-4021,-500),0)
+Tracks["joe",table] = table("allind","NB Local|Downtown|Joetown",vec(196, 19, 130),vec(4064,16276,-307),vec(-8017,12729,-736),0)
+Tracks["albert",table] = table("allind","SB Local|Albert Forest",vec(0, 195, 245),vec(15000,8000,-1400),vec(9714,-8037,-1700),0)
+Tracks["infra",table] = table("allind","SB Local|Anyone|Infra",vec(175, 56, 192),vec(12166,14840,-1600),vec(5474,8316,-2200),0)
+
+Tracks["scythe",table] = table("all","Scythe Yard",vec(155, 150, 74),vec(-14307,10500,-730),vec(-15277,2000,-938),0)
+
+Tracks["nstage",table] = table("all","",vec(255),vec(17000),vec(-17000),0)
+Tracks["sstage",table] = table("all","",vec(255),vec(17000),vec(-17000),0)
+
+Tracks["all",table] = table("","",vec(255),vec(17000),vec(-17000),0)
+Tracks["allind",table] = table("scythe","",vec(255),vec(17000),vec(-17000),0)
+
+
+#Tracks["south",table] = table("scythe","Scythe Yard|South Shorts",vec(50,50,200),vec(-12596,-41,113),vec(-16215,-15605,-841))
+#Tracks["north",table] = table("scythe","Scythe Yard|North Shorts",vec(200,50,50),vec(4007,12161,446),vec(-12224,8272,-593))
+
+
+#Markers - A position and yaw angle to place an industry marker - pulls information from the track list
+WorldMarks:pushArray(array("scythe",vec(-13570,827,-538),180))
+WorldMarks:pushArray(array("joe",vec(-8162,14295,-292),180))
+WorldMarks:pushArray(array("joe",vec(2494,12238,-190),270))
+WorldMarks:pushArray(array("sea",vec(-8682,2385,-120),180))
+WorldMarks:pushArray(array("seatank1",vec(-5146,6923,-235),180))
+WorldMarks:pushArray(array("seadeep",vec(-7458,4616,-200),180))
+WorldMarks:pushArray(array("n5",vec(6640,-3751,600),90))
+WorldMarks:pushArray(array("branchlog",vec(-12700,-5900,-290),174))
+WorldMarks:pushArray(array("anyload1",vec(-9242,-9362,-949),270))
+WorldMarks:pushArray(array("anyload2",vec(-1494,-8866,-871),270))
+WorldMarks:pushArray(array("albert",vec(10453,-6699,-1300),180))
+WorldMarks:pushArray(array("albert",vec(14030,7409,-1500),0))
+WorldMarks:pushArray(array("albertscrap",vec(11141,3836,-1300),270))
+WorldMarks:pushArray(array("albertbrew",vec(13180,-4631,-1452),63))
+WorldMarks:pushArray(array("infra",vec(12081,13837,-1550),43))
+WorldMarks:pushArray(array("anysteel",vec(8730,15332,-1400),0))
+WorldMarks:pushArray(array("anydock1",vec(11891,10840,-1784),180))
+WorldMarks:pushArray(array("anymisc",vec(11700,9300,-1763),200))
+WorldMarks:pushArray(array("infra",vec(5533,8323,-1700),265))
+WorldMarks:pushArray(array("lazmmm1",vec(1750,-3200,-1681),61))
+WorldMarks:pushArray(array("s5",vec(6611,-4206,-1835),91))
+WorldMarks:pushArray(array("joeauto",vec(-4437,14745,-540),270))
+WorldMarks:pushArray(array("joeelec",vec(-6828,12450,-538),90))
+WorldMarks:pushArray(array("joefabric1",vec(-339,12350,-539),90))
+WorldMarks:pushArray(array("joebrew1",vec(2778,16150,-405),270))
+WorldMarks:pushArray(array("joebrewtank",vec(2196,14750,-530),180))
+
+#List of interchange tracks that trains will leave the map by. Pairs of string tracknames and number weight. 0.5 means "for every car sent to an industry, 0.5 cars on average are sent to staging"
+Interchanges = array("n1",0.45,"n3",0.25,"s2",0.35)

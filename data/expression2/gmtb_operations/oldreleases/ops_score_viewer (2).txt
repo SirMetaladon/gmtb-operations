@@ -1,0 +1,190 @@
+@name gmtb_operations/OPS Score Viewer
+@inputs EGP:wirelink EGP2:wirelink Scores:table Names:table TimeElapsed SegmentsActive:table TargetCarcount
+@persist Sortal:string SortDirection Segments:table ConfigName:string
+@trigger none
+
+if(dupefinished()){reset()}
+
+
+if(first()){
+    
+    #v1.1 - instantiated versions, added top line detailing target, current overall score totals
+    
+    Sortal = "interacts"
+    SortDirection = 1 
+    
+    findInSphere(entity():pos(),1024)
+    findClipToClass("gmod_wire_expression2")
+    local E2s = findToArray()
+    
+    for(X = 1,E2s:count()){
+        
+        if(E2s[X,entity]:getName():find("OPS Score Tracker")){
+            
+            local Wirelink = E2s[X,entity]
+            
+            entity():createWire(Wirelink,"Scores","Scores")
+            entity():createWire(Wirelink,"Names","Names")
+            entity():createWire(Wirelink,"TimeElapsed","TimeElapsed")
+            
+        }elseif(E2s[X,entity]:getName():find("Operations")){
+            
+            local Wirelink = E2s[X,entity]
+            
+            entity():createWire(Wirelink,"SegmentsActive","SegmentsActive")
+            entity():createWire(Wirelink,"TargetCarcount","TargetCarcount")
+            
+        }
+        
+    }
+    
+    
+    
+    #include "gmtb_operations/opsconfig/lober_jobs"
+    ##include "gmtb_operations/opsconfig/ssg_rsg_jobs"
+    ##include "gmtb_operations/opsconfig/ssg2_standard"
+    ##include "gmtb_operations/opsconfig/miamisub_standard"
+    
+    timer("egp1",2000)
+    timer("egp2",6000)
+
+}
+
+if(clk("egp1")){
+    
+    timer("egp1",2000)
+
+    K = Scores:keys()
+    
+    KT = K:count()
+    EGP:egpClear()
+    
+    K2 = array()
+    K3 = array()
+    
+    for(X = 1,KT){
+        
+        S = K[X,string]
+        
+        if(Scores[S,table]["scoretype",string] != "player" & Scores[S,table]["scoretype",string] != "total"){
+            continue
+        }
+        
+        SortNumber = ((Scores[S,table]["deliveries",number]/50) + (round(Scores[S,table]["dist",number]/(12*5280),1)/500) + ((Scores[S,table]["interacts",number]^2)/(90^2)) + (Scores[S,table]["final",number]/25) + (Scores[S,table]["offmap",number]/25))#Scores[S,table][Sortal,number]
+        
+        Needle = 1
+        
+        for(Y = 1,K2:count()){
+            
+            if(K3[Y,number]*SortDirection <= SortNumber*SortDirection){
+                
+                break
+                
+            }
+            
+            Needle++
+            
+        }
+        
+        K2:insertString(Needle,S)
+        K3:insertNumber(Needle,SortNumber)
+    
+    }
+    
+    KT = K2:count()+1
+    
+    EGP:egpText(1,ConfigName+"  SPWN: "+Scores["Total",table]["spawned",number]+"  DEL: "+Scores["Total",table]["deletions",number]+"  Target: "+TargetCarcount+" - "+round(TimeElapsed/3600,1)+" hrs",vec2(0,0))
+    #EGP:egpText(1+KT,round(Scores[S,table]["dist",number]/(12*5280),1)+" CM",vec2(130,0))
+    #EGP:egpText(1+(KT*2),Scores[S,table]["deliveries",number]+" MV",vec2(220,0))
+    #EGP:egpText(1+(KT*3),Scores[S,table]["interacts",number]+" INT",vec2(285,0))
+    #EGP:egpText(1+(KT*4),Scores[S,table]["final",number]+" local",vec2(360,0))
+    #EGP:egpText(1+(KT*5),Scores[S,table]["offmap",number]+" off-map",vec2(430,0))
+
+    for(X = 2,KT){
+        
+        S = K2[X-1,string]
+        
+        EGP:egpText(X,Names[S,string]:sub(0,15),vec2(0,(X-1)*14))
+        EGP:egpText(X+KT,round(Scores[S,table]["dist",number]/(12*5280),1)+" CM",vec2(130,(X-1)*14))
+        EGP:egpText(X+(KT*2),Scores[S,table]["deliveries",number]+" MV",vec2(220,(X-1)*14))
+        EGP:egpText(X+(KT*3),Scores[S,table]["interacts",number]+" INT",vec2(285,(X-1)*14))
+        EGP:egpText(X+(KT*4),Scores[S,table]["final",number]+" local",vec2(360,(X-1)*14))
+        EGP:egpText(X+(KT*5),Scores[S,table]["offmap",number]+" off-map",vec2(430,(X-1)*14))
+        
+    }
+    
+}elseif(clk("egp2")){
+    
+    timer("egp2",2000)
+
+    EGP2:egpClear()
+    
+    K = SegmentsActive:keys()
+    KT = K:count()
+    
+    K2 = array()
+    K3 = array()
+    
+    Combine = table()
+    Reference = table()
+    
+    
+    for(X = 1,KT){
+        
+        local S = K[X,string]
+        local Name = Segments[S,table]["job",string]
+        
+        
+        Combine[Name,number] = Combine[Name,number] + SegmentsActive[S,number]
+        Reference[Name,string] = S
+        Combine["Total",number] = Combine["Total",number] + SegmentsActive[S,number]
+        
+    }
+    
+    KT2 = Combine:keys()
+        
+        
+    for(X = 1,KT2:count()){
+        
+        S = KT2[X,string]
+        
+        Needle = 1
+        
+        for(Y = 1,K2:count()){
+            
+            if(K3[Y,number] <= Combine[S,number]){
+                
+                break
+                
+            }
+            
+            Needle++
+            
+        }
+        
+        K2:insertString(Needle,Reference[S,string])
+        K3:insertNumber(Needle,Combine[S,number])
+    
+    }
+        
+    for(X = 1,K2:count()){
+        
+        S = K2[X,string]
+        
+        Color = clamp(Segments[S,table]["color",vector],0,255)
+        Color = Color != vec(0) ? Color : vec(200)
+        
+        Text = Segments[S,table]["job",string]+" - "+Segments[S,table]["name",string]
+        Text = Text == " - " ? "Total - All Jobs" : Text
+        
+        Job = Segments[S,table]["job",string]
+        Job = Job == "" ? "Total" : Job
+
+        EGP2:egpText(X,Text,vec2(0,(X-1)*14))
+        EGP2:egpColor(X,Color)
+        EGP2:egpText(X+K2:count(),Combine[Job,number]+" Cars Active",vec2(390,(X-1)*14))
+        EGP2:egpColor(X+K2:count(),Color)
+        
+    }
+    
+}

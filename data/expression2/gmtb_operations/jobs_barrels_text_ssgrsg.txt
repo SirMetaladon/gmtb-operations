@@ -1,0 +1,94 @@
+@name gmtb_operations/job_barrels_text_ssgrsg
+@inputs 
+@outputs 
+@persist Scale:vector X Color:vector
+@trigger 
+
+if(first() | dupefinished()){
+    
+        
+    X = 1
+    Scale = vec(1.25,0.1,1)
+    timer("one",1000)
+    timer("two",3000)
+    Color = vec(45)
+    
+}
+if(clk("one")){
+holoCreate(X,vec(-10383.45,229.31,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10283.14,139.98,2471.26),Scale,ang(0,175,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10295.6,141.02,2471.26),Scale,ang(0,175,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10308.06,142.05,2471.26),Scale,ang(0,175,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10320.51,143.08,2471.26),Scale,ang(0,175,0),Color,"models/sprops/misc/alphanum/alphanum_y.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10028.1,108.66,2462.43),Scale,ang(0,142,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10035.96,114.83,2462.43),Scale,ang(0,142,-2),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10043.83,121,2462.43),Scale,ang(0,142,-2),Color,"models/sprops/misc/alphanum/alphanum_c.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10051.7,127.17,2462.43),Scale,ang(0,142,-2),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10059.57,133.34,2462.43),Scale,ang(0,142,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10184.43,201.51,2462.28),Scale,ang(0,159,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10193.75,205.16,2462.28),Scale,ang(0,159,-2),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10203.06,208.8,2462.28),Scale,ang(0,159,-2),Color,"models/sprops/misc/alphanum/alphanum_c.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10212.37,212.44,2462.28),Scale,ang(0,159,-2),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10221.69,216.08,2462.28),Scale,ang(0,159,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10457.24,207.38,2462.33),Scale,ang(0,-155,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10466.31,203.17,2462.33),Scale,ang(0,-155,-2),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10475.38,198.97,2462.33),Scale,ang(0,-155,-2),Color,"models/sprops/misc/alphanum/alphanum_c.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10484.45,194.76,2462.33),Scale,ang(0,-155,-2),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10493.53,190.55,2462.33),Scale,ang(0,-155,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10558.14,90.36,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9882.42,-8.29,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9873.77,-17.31,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9865.12,-26.34,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9856.47,-35.36,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+
+}
+
+if(clk("two")){
+holoCreate(X,vec(-10566.2,84.44,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10566.2,84.44,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10574.26,78.52,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_c.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10574.26,78.52,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_c.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10582.32,72.6,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10582.32,72.6,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10590.38,66.68,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10590.38,66.68,2462.36),Scale,ang(0,-144,-2),Color,"models/sprops/misc/alphanum/alphanum_l.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10651.05,-94.77,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10651.05,-94.77,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10653.24,-107.08,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10653.24,-107.08,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10655.44,-119.39,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10655.44,-119.39,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10657.63,-131.69,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10657.63,-131.69,2462.41),Scale,ang(0,-100,-1),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10561.87,-25.17,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10561.87,-25.17,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10569.94,-34.71,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10569.94,-34.71,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10578.01,-44.26,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10578.01,-44.26,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10586.08,-53.8,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_y.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10586.08,-53.8,2465.05),Scale,ang(0,-130,0),Color,"models/sprops/misc/alphanum/alphanum_y.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10370.97,228.69,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10370.97,228.69,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10358.48,228.08,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10358.48,228.08,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10346,227.46,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10346,227.46,2472.47),Scale,ang(0,177,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10044.47,-11.92,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_y.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10044.47,-11.92,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_y.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10036.64,-21.67,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10036.64,-21.67,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10028.81,-31.41,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10028.81,-31.41,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10020.98,-41.15,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10020.98,-41.15,2469.27),Scale,ang(0,129,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9882.42,-8.29,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9882.42,-8.29,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_r.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9873.77,-17.31,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9873.77,-17.31,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_o.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9856.47,-35.36,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9856.47,-35.36,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_d.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9865.12,-26.34,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-9865.12,-26.34,2472.48),Scale,ang(0,134,0),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"sprops/textures/sprops_metal5"), holoBodygroup(X,0,1),X++
+
+}
