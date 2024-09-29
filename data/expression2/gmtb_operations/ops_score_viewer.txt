@@ -40,10 +40,10 @@ if(first()){
     
     
     
-    ##include "opsconfig/lober_jobs"
-    ##include "opsconfig/ssg_rsg_jobs"
-    ##include "opsconfig/ssg2_standard"
-    #include "opsconfig/miamisub_standard"
+    ##include "gmtb_operations/opsconfig/lober_jobs"
+    #include "gmtb_operations/opsconfig/ssg_rsg_jobs"
+    ##include "gmtb_operations/opsconfig/ssg2_standard"
+    ##include "gmtb_operations/opsconfig/miamisub_standard"
     
     timer("egp1",2000)
     timer("egp2",6000)

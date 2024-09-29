@@ -1,4 +1,4 @@
-@name gmtb_operations/operations_v1.461
+@name gmtb_operations/operations_v1.462
 @persist HID TargetCarcount PlaceholderID UniqueCommandID TT Xt CurrentCarcount StoredCarcount BlockIncrX TypeIncr IncrX IncrY OverallSpawned IndTurn StartTime ColorTransformer InboundVariance WaitToRefire AutomaticSpawnsEnabled PointsIncrementer HologramsOn
 
 @persist [MainEntityList Tracks CarsCreatedByCommand AllDestinationsBTR LocalDestinationsBTR LocalSourcesBTR AllSourcesBTR ToSendOut WorldMarks Adder CommandStack CarspawnerCommandStack SpawnCommandsByLocation TrackReservations LadingDescriptions]:table
@@ -20,6 +20,7 @@
 
 if(first() | dupefinished()){
     
+    #v1.462 - ability to not spawn duplicate inbounds
     #v1.461 - added the ability to display lading info on deliveries, updated filepaths
     #v1.46  - fixed car data getting wiped on reclass
     #v1.459 - cancel inbounds feature with .inbound cancel, ability to define blocking in configs w/ ReblockData
@@ -45,8 +46,8 @@ if(first() | dupefinished()){
     #Configuration file for the map
     
     ##include "gmtb_operations/opsconfig/ssg2_standard"
-    ##include "gmtb_operations/opsconfig/ssg_rsg_jobs"
-    #include "gmtb_operations/opsconfig/lober_jobs"
+    #include "gmtb_operations/opsconfig/ssg_rsg_jobs"
+    ##include "gmtb_operations/opsconfig/lober_jobs"
     ##include "gmtb_operations/opsconfig/miamisub_standard"
     
     ##include "gmtb_operations/opsconfig/ssg_rsg_jobs_nocustom"
@@ -55,7 +56,7 @@ if(first() | dupefinished()){
     ##include "gmtb_operations/opsconfig/ssg_rsg_daisychain"
     ##include "gmtb_operations/opsconfig/wrefingley_chaos"
     
-    HologramsOn = 0 #Turns the holo bounding boxes on and off; 1 = on, 0 = off
+    HologramsOn = 1 #Turns the holo bounding boxes on and off; 1 = on, 0 = off
     
     ####END_SETTINGS#########################################################
     
@@ -580,6 +581,38 @@ if(first() | dupefinished()){
         
     }
     
+    #determines if the current train is valid or not
+    function number isValidTrain(ProspectiveTrain:string,PreviousTrain:string){
+        
+        if(ProspectiveTrain == PreviousTrain){
+            
+            return 0
+            
+        }
+        
+        local CutoffData = TrainPresets[ProspectiveTrain,table]["cutoff",array]
+        
+        if(!CutoffData:count()){
+            
+            return 1
+            
+        }
+        
+        local Count = SegmentsActive[CutoffData[1,string],number]
+        
+        if(Count > CutoffData[2,number]){
+            
+            print(ProspectiveTrain,CutoffData)
+            return 0
+            
+        }else{
+            
+            return 1
+            
+        }
+        
+    }
+    
     #allows it to communicate with the carspawner with datasignals
     dsJoinGroup("operations")
     
@@ -597,7 +630,7 @@ if(first() | dupefinished()){
     TracksToProcess = Tracks:keys()
     LocsToMark = WorldMarks:keys()
     
-    Version = "v1.461"
+    Version = "v1.462"
     
     Message = "E2 is configured incorrectly! Version compatibility is incorrect, or the config is missing."
     if(ConfigLoaded != Version){printM(Message),error(Message)}
@@ -1029,26 +1062,35 @@ if(clk("spawn inbound")){
         printM("Queued inbound train.")
         
         local Try = PrevInbound
-        while(Try == PrevInbound){
+        while(!isValidTrain(Try,PrevInbound) & safe()){
             Try = rollW(InboundTrains,"")
         }
         
-        PrevInbound = Try
-        
-        local Instructions = TrainPresets[Try,table]["data",table]
-        
-        for(X = 1,Instructions:count()){
+        if(!isValidTrain(Try,PrevInbound)){
             
-            local CurrentInstruction = Instructions[X,table]
+            stoptimer("spawn inbound")
+            timer("spawn inbound",1000)
+            
+        }else{
         
-            local Spawns = CurrentInstruction["spawns",array]
-            local SelectedJobs = CurrentInstruction["jobs",array]
-            local Depth = CurrentInstruction["depth",number]
+            PrevInbound = Try
             
-            local Count = ceil(TrainPresets[Try,table]["length",number]*CurrentInstruction["share",number]*random(1-InboundVariance,1))
+            local Instructions = TrainPresets[Try,table]["data",table]
             
-            createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
-  
+            for(X = 1,Instructions:count()){
+                
+                local CurrentInstruction = Instructions[X,table]
+            
+                local Spawns = CurrentInstruction["spawns",array]
+                local SelectedJobs = CurrentInstruction["jobs",array]
+                local Depth = CurrentInstruction["depth",number]
+                
+                local Count = ceil(TrainPresets[Try,table]["length",number]*CurrentInstruction["share",number]*random(1-InboundVariance,1))
+                
+                createSpawnCommand(Count,Spawns,SelectedJobs,Depth)
+      
+            }
+            
         }
         
     }
@@ -2189,7 +2231,7 @@ if(clk("CommandStack")){
                     local Reservation = TrackData["spawn exclusion",string]
                     local Reserved = (Reservation != "") ? TrackReservations[Reservation,number] : 0
                     
-                    if(TrackData["spawnpos",vector] != vec(0) & !TrackData["badspawn",number] & !Reserved & (!Open | trackIsClear(Item)) & (!Open | !TrackData["work",array]:count())){
+                    if(TrackData["spawnpos",vector] != vec(0) & !TrackData["badspawn",number] & !Reserved & (!Open | trackIsClear(Item)) & (!Open | (!TrackData["work",array]:count() | TrackData["not a destination",number]))){
                         
                         AcceptableSpawns:pushString(Item)
                         
