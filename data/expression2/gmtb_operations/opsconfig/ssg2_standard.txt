@@ -22,7 +22,7 @@ TargetCarcount = 250
 
 Map = "gm_sunsetgulch2"
 ConfigName = "SSG2 Std v1.1"
-ConfigLoaded = "v1.461"
+ConfigLoaded = "v1.463"
 Era = "1970s 1980s"
 
 Colors = table()
@@ -54,7 +54,7 @@ LadingDescriptions["axles",string] = "Lading: New Axles"
 LadingDescriptions["ties",string] = "Lading: Railroad Ties"
 LadingDescriptions["sand",string] = "Lading: Sand"
 LadingDescriptions["diesel",string] = "Lading: Diesel Fuel"
-LadingDescriptions["trailersempty",string] = "Lading: Trailers"
+LadingDescriptions["tofc",string] = "Lading: Trailers"
 LadingDescriptions["goods",string] = "Lading: General Goods"
 LadingDescriptions["supplies",string] = "Lading: Materials & Supplies"
 LadingDescriptions["dryfoods",string] = "Lading: Dry Foods"
@@ -104,10 +104,14 @@ LadingDescriptions["explosives",string] = "Lading: EXPLOSIVES - HANDLE WITH CARE
 LadingDescriptions["armoredvehicles2empty",string] = "Lading: Armored Vehicles for Deployment"
 LadingDescriptions["armoredvehiclesempty",string] = "Lading: Armored Vehicles for Refit"
 
-function table zoneblock(N,A:array){
+function table zoneblock(N:number,A:array){
     
-    local XP = YP = ZP = -inf()
-    local XN = YN = ZN = inf()
+    local XP = -500000
+    local YP = -500000
+    local ZP = -500000
+    local XN = 500000
+    local YN = 500000
+    local ZN = 500000
     
     for(X = 1,A:count()){
         
@@ -155,19 +159,10 @@ function cyclecloner(T:table,R:array,S:string,T2:table){
     
 }
 
-function reorderBlocks(R:array){
-    
-    foreach(K,S2:string = R){
-        
-        Segments[S2,table]["blockinfo",string] = K:toString()+S2
-        
-    }
-    
-}
-
 if(Map != map()){
     
     print("Wrong configuration for \""+map()+"\". This config is designed for "+Map)
+    print("Config name "+ConfigName+", version "+ConfigLoaded+", default carcount "+TargetCarcount)
     
 }
 
@@ -286,7 +281,7 @@ Tracks["drocktrans",table] = table("locgroup" = "zone0",
 "name" = "Dragon's Rock Transload","color" = Colors["unassigned",vector],
 "boxhi" = vec(11954-50,996,10383),"boxlo" = vec(10894,-2652,10182),
 "spawnpos" = vec(10994,896,10282),"spawnang" = -166,"route exclusion" = "gulch",
-"work" = array(2,"tofc_flatcar", "trailersempty","trailersempty",1,"general_boxcar", "goods","empty"))
+"work" = array(2,"tofc_flatcar", "empty","tofc",1,"general_boxcar", "goods","empty"))
 
 Tracks["drockcan",table] = table("locgroup" = "zone0",
 "name" = "Dragon's Rock Cannery","color" = Colors["unassigned",vector],
@@ -299,7 +294,7 @@ Tracks["drockintermodal",table] = table(
 "boxhi" = vec(13541,4326,10383),"boxlo" = vec(13229,-6769,10182),
 "spawnpos" = vec(13441,-6669,10283),"spawnang" = 0,"route exclusion" = "gulch")]#
  
-"dryfoods","empty","goods","foods","produce","packaging"
+#"dryfoods","empty","goods","foods","produce","packaging"
 
 Tracks["sandteam",table] = table("locgroup" = "zone1",
 "name" = "Sandstone Team Track","color" = Colors["unassigned",vector],
@@ -694,7 +689,7 @@ Tracks["rockport1",table] = table(
 "name" = "Port of Rockfort","color" = Colors["unassigned",vector],
 "boxhi" = vec(4149,4000,-8785),"boxlo" = vec(2755,-4960,-8986),
 "spawnpos" = vec(2855,6847,-8886),"spawnang" = -154,
-"work" = array(10,"tofc_flatcar", "trailersempty","trailersempty",12,"tofc_flatcar", "containersempty","containersempty",4,"general_tanker","diesel","empty"))
+"work" = array(10,"tofc_flatcar", "tofc","empty",12,"international", "containers","containers",4,"general_tanker","diesel","empty"))
 Tracks["rockport2",table] = Tracks["rockport2",table]:merge(table(
 "boxhi" = vec(3993,4000,-8785),"boxlo" = vec(1742,-5655,-8986),"locgroup" = "zone7a",
 "spawnpos" = vec(1842,7849,-8886),"spawnang" = -154,"work" = array()))

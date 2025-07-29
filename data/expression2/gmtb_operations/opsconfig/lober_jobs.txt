@@ -25,12 +25,15 @@ TargetCarcount = 150
 
 Map = "gm_wrefingley"
 ConfigName = "Wrefingley Std v0.62"
-ConfigLoaded = "v1.461"
-
-function table zoneblock(N,A:array){
+ConfigLoaded = "v1.463"
+function table zoneblock(N:number,A:array){
     
-    local XP = YP = ZP = -inf()
-    local XN = YN = ZN = inf()
+    local XP = -500000
+    local YP = -500000
+    local ZP = -500000
+    local XN = 500000
+    local YN = 500000
+    local ZN = 500000
     
     for(X = 1,A:count()){
         
@@ -54,7 +57,7 @@ function table zoneblock(N,A:array){
         
     }
     
-    for(X = 1,A:count() * N){
+    for(X = 1,A:count()* N){
         
         Tracks[A[X,string],table]["boxhi",vector] = vec(XP,YP,ZP)
         Tracks[A[X,string],table]["boxlo",vector] = vec(XN,YN,ZN)
@@ -81,6 +84,7 @@ function cyclecloner(T:table,R:array,S:string,T2:table){
 if(Map != map()){
     
     print("Wrong configuration for \""+map()+"\". This config is designed for "+Map)
+    print("Config name "+ConfigName+", version "+ConfigLoaded+", default carcount "+TargetCarcount)
     
 }
 

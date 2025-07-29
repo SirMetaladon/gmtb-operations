@@ -32,12 +32,16 @@ WolMult = 2
 
 Map = "gm_sunsetgulch_rsg"
 ConfigName = "SSGRSG Std v1.2"
-ConfigLoaded = "v1.462"
+ConfigLoaded = "v1.463"
 
-function table zoneblock(N,A:array){
+function table zoneblock(N:number,A:array){
     
-    local XP = YP = ZP = -inf()
-    local XN = YN = ZN = inf()
+    local XP = -500000
+    local YP = -500000
+    local ZP = -500000
+    local XN = 500000
+    local YN = 500000
+    local ZN = 500000
     
     for(X = 1,A:count()){
         
@@ -88,6 +92,7 @@ function cyclecloner(T:table,R:array,S:string,T2:table){
 if(Map != map()){
     
     print("Wrong configuration for \""+map()+"\". This config is designed for "+Map)
+    print("Config name "+ConfigName+", version "+ConfigLoaded+", default carcount "+TargetCarcount)
     
 }
 
@@ -98,7 +103,7 @@ LadingDescriptions["trailer",string] = "Lading: Trailers"
 LadingDescriptions["scrap",string] = "Lading: Scrap Metal"
 LadingDescriptions["sulfur",string] = "Lading: Sulfur"
 LadingDescriptions["fabrications",string] = "Lading: Fabrications"
-LadingDescriptions["arlen3",string] = "Lading: How did you get this?"
+LadingDescriptions["arlen3",string] = "How did you get this?"
 LadingDescriptions["byproducts",string] = "Lading: Byproducts"
 LadingDescriptions["arlenempty",string] = "Lading: Empty"
 LadingDescriptions["supplies",string] = "Lading: Supplies"

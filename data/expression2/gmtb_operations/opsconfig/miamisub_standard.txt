@@ -16,14 +16,18 @@ TrainPresets = table()
 TargetCarcount = 200
 
 Map = "gm_miamisub"
-ConfigName = "Miami Sub Standard v0.7"
-ConfigLoaded = "v1.461"
+ConfigName = "Miami Sub Standard v0.71"
+ConfigLoaded = "v1.463"
 Era = "2000s"
 
-function table zoneblock(N,A:array){
+function table zoneblock(N:number,A:array){
     
-    local XP = YP = ZP = -inf()
-    local XN = YN = ZN = inf()
+    local XP = -500000
+    local YP = -500000
+    local ZP = -500000
+    local XN = 500000
+    local YN = 500000
+    local ZN = 500000
     
     for(X = 1,A:count()){
         
@@ -358,7 +362,7 @@ Segments["bowdentodade",table] = table(
     
 
 Segments["containers1",table] = table(
-    "job" = "Container Train","color" = Colors["inter1",vector],"name" = "Train",
+    "job" = "Container Train","color" = Tracks["inter1",table]["color",vector],"name" = "Train",
     "routing" = table(array("dadein","bowdenin","towerin"),array("inter1")))
 
 Segments["containers2",table] = table(
