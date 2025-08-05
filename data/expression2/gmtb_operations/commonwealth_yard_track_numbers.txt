@@ -1,0 +1,112 @@
+@name gmtb_operations\commonwealth_yard_track_numbers
+@inputs 
+@outputs 
+@persist X [Scale Color]:vector
+@trigger 
+
+if(dupefinished()){reset()}
+
+if(first()){
+    
+        
+    X = 1
+    Scale = vec(5,0.16666666666667,3.3333333333333)
+    timer("one",1000)
+    timer("two",2000)
+    Color = vec(220)
+    
+}
+ #[ WORK ZONE
+
+
+    "spawnpos" = vec(-13240,-3494,1527)
+    "spawnpos" = vec(-13431,-4410,1527)
+    "spawnpos" = vec(-13625,-5107,1527)
+    "spawnpos" = vec(-13815,-5824,1527)
+
+  ]#  
+
+if(clk("one")){
+    
+    #port hampter
+    
+holoCreate(X,vec(12830,-6330,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13027,-6330,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13217,-5640,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13409,-4930,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_4.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13600,-4150,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_5.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13792,-3399,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_6.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(13987,-2637,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_7.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(14178,-1861,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_8.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(14369,-1055,-9765),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_9.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(14510,-916,-9765),Scale,ang(0,170,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(14542.5,-922,-9765),Scale,ang(0,170,90),Color,"models/sprops/misc/alphanum/alphanum_0.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+#mecklenberg
+
+holoCreate(X,vec(-2103,5450,-3891),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-2295,6176,-3891),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-2485,6792,-3891),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-1910,4650,-3891),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_0.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+holoCreate(X,vec(254,14171,-3891),Scale,ang(0,-90,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(254,14362,-3891),Scale,ang(0,-90,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(254,14553,-3891),Scale,ang(0,-90,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(254,13980,-3891),Scale,ang(0,-90,90),Color,"models/sprops/misc/alphanum/alphanum_0.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+#ashboro south
+
+holoCreate(X,vec(-13050,3620,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_p.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,3680,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,3740,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,3800,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+holoCreate(X,vec(-13240,4200,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_4.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13431,5000,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13625,5800,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13815,6400,1497),Scale,ang(0,0,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+
+
+}
+if(clk("two")){
+    
+#ashboro north
+
+holoCreate(X,vec(-13050,-2620,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_p.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,-2680,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,-2740,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13050,-2800,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+holoCreate(X,vec(-13240,-3494,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_4.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13431,-4410,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13625,-5107,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-13815,-5824,1497),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+
+#appomattox
+
+holoCreate(X,vec(-10756,330,5134),Scale,ang(0,165,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10740,390,5134),Scale,ang(0,165,90),Color,"models/sprops/misc/alphanum/alphanum_s.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10730,450,5134),Scale,ang(0,170,90),Color,"models/sprops/misc/alphanum/alphanum_a.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10720,510,5134),Scale,ang(0,170,90),Color,"models/sprops/misc/alphanum/alphanum_p.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+holoCreate(X,vec(-10896,330,5134),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-11089,-354,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-11280,-342,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-11471,334,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_4.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-11663,990,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_5.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-11792,1053,5133),Scale,ang(0,195,90),Color,"models/sprops/misc/alphanum/alphanum_6.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+
+holoCreate(X,vec(-10709,6060,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_1.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10709,6000,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_b.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10511,6770,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_2.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10511,6720,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_b.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10320,7487,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_3.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10320,7427,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_b.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10129,8160,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_4.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+holoCreate(X,vec(-10129,8100,5133),Scale,ang(0,180,90),Color,"models/sprops/misc/alphanum/alphanum_b.mdl"), holoMaterial(X,"debug/debugdrawflat"),holoBodygroup(X,0,1),X++
+
+}
+
