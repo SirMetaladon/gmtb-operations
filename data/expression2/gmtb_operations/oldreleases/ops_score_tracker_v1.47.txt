@@ -14,6 +14,7 @@ if(dupefinished()){reset()}
 
 if(first()){
     
+    #v1.5  - attempt to fix the crash bug
     #v1.47 - autosaves save over themselves
     #v1.46 - autosaved session information, took a crack at fixing the connected bug
     #v1.45 - made check for blank tracking more descriptive, made cars check velocity before freezing, added a toggle for freezing

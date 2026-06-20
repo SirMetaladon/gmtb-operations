@@ -1,8 +1,8 @@
-@name gmtb_operations/ops_score_tracker_v1.51
-@inputs MainEntityList:table
+@name gmtb_operations/ops_score_tracker_v1.57
+@inputs MainEntityList:table# ScoresIn:table
 
-@persist [CarData Scores CurrentlyInteracting CurrInteractUNSAFE LastPlayerToInteract Names CommandStack EntSeenThisScan ExcludedEntities]:table [SaveFile MainListKeys Print ToFreeze]:array ScanInterval HID IdleFreezeInterval PreviousScanTime ScanIncrement FreezingOn SessionID
-@outputs Scores:table Names:table TimeElapsed CommandStack:table CurrentlyInteracting:table LastPlayerToInteract:table ScanIncrement FreezingOn
+@persist [CarData Scores CurrentlyInteracting CurrInteractUNSAFE LastPlayerToInteract Ingame_Name_Lookup CommandStack EntSeenThisScan ExcludedEntities Awards AwardData]:table [SaveFile MainListKeys Print ToFreeze]:array ScanInterval HID IdleFreezeInterval PreviousScanTime ScanIncrement FreezingOn SessionID
+@outputs Scores:table Ingame_Name_Lookup:table TimeElapsed CommandStack:table CurrentlyInteracting:table LastPlayerToInteract:table ScanIncrement FreezingOn
 
 @inputs Inc Signal:table
 @persist Response
@@ -14,6 +14,9 @@ if(dupefinished()){reset()}
 
 if(first()){
     
+    #v1.57 - minor refactoring of score system to fix some bugs and make code cleaner
+    #v1.56 - added server name to data files, changed some names around
+    #v1.55 - added a bunch of little stats because I felt like it!
     #v1.51 - added weld to allowed constraints
     #v1.5  - attempt to fix the crash bug, updated to modern wire
     #v1.47 - autosaves save over themselves
@@ -30,10 +33,10 @@ if(first()){
     FreezingOn = 1 #on by default, use .autofreeze to toggle
     
     Scores = table()
-    Names = table()
+    Ingame_Name_Lookup = table()
     Scores["Total",table] = table("scoretype" = "total")
     Scores["the wind",table] = table("scoretype" = "the wind")
-    Names["Total",string] = "Total"
+    Ingame_Name_Lookup["Total",string] = "Total"
     
     Response = Inc
     
@@ -54,6 +57,28 @@ if(first()){
     MainListKeys = array()
     SaveFile = array()
     ToFreeze = array()
+    Awards = table()
+    AwardData = table()
+    AwardData["Big Hauler",table] = table("scorekey" = "dist","s1" = " with ","s2" = " car-miles.")
+    AwardData["Getting it Done",table] = table("scorekey" = "deliveries","s1" = " delivered ","s2" = " cars to destinations.")
+    AwardData["Local Service",table] = table("scorekey" = "final","s1" = " delivered ","s2" = " cars to customers.") #MINUS OFFMAP 
+    AwardData["Link in the Chain",table] = table("scorekey" = "offmap","s1" = " sent ","s2" = " cars off-map.")
+    AwardData["Heavy Lifter",table] = table("scorekey" = "distup","s1" = " lifted cars ","s2" = " miles cumulatively.")
+    AwardData["System Keystone",table] = table("scorekey" = "interacts","s1" = " handled ","s2" = " cars in transit.")
+    
+    
+    function reset_awards(){
+        
+        Awards = table()
+        local Keys = AwardData:keys()
+    
+        for(X = 1,Keys:count()){
+            
+            Awards[Keys[X,string],table] = table("player" = "", "score" = "")
+            
+        }
+        
+    }
     
     function flash(E:entity,V:vector){
         
@@ -106,11 +131,11 @@ if(first()){
         
     }
     
-    function instantiate(Entry:string,Type:string,Descriptor:string){
+    function instantiate_in_score_table(Entry:string,Type:string,Descriptor:string){
         
         if(Entry == ""){
             
-            print("Tracker error on "+Type+" "+Descriptor)
+            print("Tracker: Instantiation error on "+Type+" "+Descriptor)
             
         }else{
         
@@ -163,7 +188,7 @@ if(first()){
                     
                     ArrayOutput:insertString(Insert,OwnerSteamID)
                     
-                    instantiate(OwnerSteamID,"player","most recent interact")
+                    instantiate_in_score_table(OwnerSteamID,"player","most recent interact")
                     Scores[OwnerSteamID,table]["most recent interaction",number] = systime()
                     
                 }
@@ -203,7 +228,7 @@ if(first()){
     
     function string mapname(){
         
-        local Real = map()
+        local Real = _MAP
         
         if(Real == "gm_sunsetgulch_rsg"){
             
@@ -216,6 +241,10 @@ if(first()){
         }elseif(Real == "gm_wrefingley"){
             
             return "Wrefingley"
+            
+        }elseif(Real == "gm_sunsetgulch2"){
+            
+            return "SSG2"
             
         }else{
             
@@ -251,6 +280,18 @@ if(first()){
         return StrOut
         
     }
+    
+    function record_score(Player:string,Type:string,Number:number){
+        
+        
+        Scores[Player,table][Type,number] = Scores[Player,table][Type,number] + Number
+        Scores["Total",table][Type,number] = Scores["Total",table][Type,number] + Number
+        
+        
+    }
+    
+    
+                                
     
     timer("CommandStack",0.1,0,function(){
             
@@ -314,7 +355,7 @@ if(first()){
                 if(Scores[PlayerSteamID,table]["most recent interaction",number] != 0){
                 #if(findPlayerBySteamID(PlayerSteamID):isValid()){
                     
-                    instantiate(PlayerSteamID,"player","handoff")
+                    instantiate_in_score_table(PlayerSteamID,"player","handoff")
                     
                     if((systime() - Scores[PlayerSteamID,table]["most recent interaction",number]) < 5*60){
                         
@@ -369,7 +410,7 @@ if(first()){
                         
                         if(!CarData[FrameID,table]:count()){
                             
-                            CarData[FrameID,table] = table("dist" = 0,"lastpos" = Pos,"interacted" = table())
+                            CarData[FrameID,table] = table("lastpos" = Pos,"interacted" = table())
                             
                         }elseif(PlayerArrayID != CarData[FrameID,table]["previous interaction",string]){
                             
@@ -383,54 +424,79 @@ if(first()){
     
                         local DistFromLastPos = Pos:distance(SpecificCarData["lastpos",vector])
                         
+                        local Vertical_Distance_Traveled = Pos:z()-SpecificCarData["lastpos",vector]:z()
+                        
                         if(ArrayOfPlayers:count()){SpecificCarData["last interacted time",number] = systime()}
                             
                         for(Y = 1,ArrayOfPlayers:count()){
                             
                             local Player = ArrayOfPlayers[Y,string]
                             
-                            instantiate(Player,"player","interacts")
+                            instantiate_in_score_table(Player,"player","interacts")
                             
                             if(Interaction == 1 & SpecificCarData["interacted",table][Player,number] == 0){
                                 
                                 SpecificCarData["interacted",table][Player,number] = 1
-                                SpecificCarData["interacts",number] = SpecificCarData["interacts",number] + 1
                                 Scores[Player,table]["interacts",number] = Scores[Player,table]["interacts",number] + 1
                                 Scores["Total",table]["interacts",number] = Scores["Total",table]["interacts",number] + 1
                                 InteractsGiven++
                                 
                             }
                             
-                            Scores[Player,table]["dist",number] = Scores[Player,table]["dist",number] + DistFromLastPos
-                            Scores["Total",table]["dist",number] = Scores["Total",table]["dist",number] + DistFromLastPos
+                            if(Vertical_Distance_Traveled > 0){
+                                
+                                record_score(Player,"distup",Vertical_Distance_Traveled)
+                                
+                            }else{
+                                
+                                record_score(Player,"distdown",Vertical_Distance_Traveled)
+                                
+                            }
+                            
+                            record_score(Player,"dist",DistFromLastPos)
                             
                         }
                         
                         if(!ArrayOfPlayers:count()){
                             
-                            Scores["the wind",table]["dist",number] = Scores["the wind",table]["dist",number] + DistFromLastPos
-                            Scores["Total",table]["dist",number] = Scores["Total",table]["dist",number] + DistFromLastPos
+                            if(Vertical_Distance_Traveled > 0){
+                                
+                                record_score("the wind","distup",Vertical_Distance_Traveled)
+                                
+                            }else{
+                                
+                                record_score("the wind","distdown",Vertical_Distance_Traveled)
+                                
+                            }
+                            
+                            record_score("the wind","dist",DistFromLastPos)
                             
                         }
                         
                         SpecificCarData["previous interaction",string] = PlayerArrayID
                         
-                        local LastInteract = SpecificCarData["last interacted time",number]
                         
-                        if((LastInteract + 60) < LocalTime){
-                            SpecificCarData["idle",number] = 1
-                        }else{
-                            SpecificCarData["idle",number] = 0
-                        }
     
-                        
+                        if(Vertical_Distance_Traveled > 0){
+                            
+                            Scores["Total",table]["milesup",number] = Scores["Total",table]["milesup",number] + (Vertical_Distance_Traveled/(12*5280))
+                            SpecificCarData["distup",number] = SpecificCarData["distup",number] + Vertical_Distance_Traveled
+                            
+                        }else{
+                            
+                            Scores["Total",table]["milesdown",number] = Scores["Total",table]["milesdown",number] + (Vertical_Distance_Traveled/(12*5280))
+                            SpecificCarData["distdown",number] = SpecificCarData["distdown",number] + Vertical_Distance_Traveled
+                            
+                        }
+                            
                         Scores["Total",table]["miles",number] = Scores["Total",table]["miles",number] + (DistFromLastPos/(12*5280))
+                        
                         
                         SpecificCarData["dist",number] = SpecificCarData["dist",number] + DistFromLastPos
                         SpecificCarData["lastpos",vector] = Pos
                         
                         local CarJob = getJob(FrameID)
-                        instantiate(CarJob,"job","main")
+                        instantiate_in_score_table(CarJob,"job","main")
                         
                         SpecificJobData = Scores[CarJob,table]
                         
@@ -439,6 +505,11 @@ if(first()){
                         SpecificJobData["runningcount",number] = SpecificJobData["runningcount",number] + 1
                         if(Interaction){SpecificJobData["interacts",number] = SpecificJobData["interacts",number] + InteractsGiven}
                         SpecificJobData["dist",number] = SpecificJobData["dist",number] + DistFromLastPos
+                        
+                        if(DistFromLastPos < 1){ #not moving
+                            SpecificJobData["idlecount",number] = SpecificJobData["idlecount",number] + 1
+                        }
+                        
                         
                     }
                     
@@ -464,40 +535,74 @@ if(first()){
         
         if(CommandStack[1,table]["command",string] == "print" & safe()){
             
-            local Autosave = (CommandStack[1,table]["automatic",number] == 1)
+            local Is_Autosave = (CommandStack[1,table]["automatic",number] == 1)
             
             if(CommandStack[1,table]["phase",string] == "begin"){
                 
-                CommandStack[1,table]["NamesToAward",array] = Scores:keys()
-                CommandStack[1,table]["Awards",table] = table()
+                reset_awards()
+                CommandStack[1,table]["names_to_evaluate_for_award",array] = Scores:keys()
                 CommandStack[1,table]["phase",string] = "loop over names"
-                CommandStack[1,table]["SaveString",string] = "Miles = "+Scores["Total",table]["miles",number]+"\n Spawned = "+Scores["Total",table]["spawned",number]+"\n Trains = "+Scores["Total",table]["trains",number]+"\n Deleted = "+Scores["Total",table]["deletions",number]+"\n Hours = "+round(TimeElapsed/(60*60),2)+"\n"
+                CommandStack[1,table]["SaveString",string] = mapname()+" hosted by "+owner():name()+"\n\""+hostname()+"\"\nMiles = "+Scores["Total",table]["miles",number]+"\n Spawned = "+Scores["Total",table]["spawned",number]+"\n Trains = "+Scores["Total",table]["trains",number]+"\n Deleted = "+Scores["Total",table]["deletions",number]+"\n Hours = "+round(TimeElapsed/(60*60),2)+"\n"
     
             }
             
             if(CommandStack[1,table]["phase",string] == "loop over names"){
             
-                while(CommandStack[1,table]["NamesToAward",array]:count() & safe()){
+                while(CommandStack[1,table]["names_to_evaluate_for_award",array]:count() & safe()){
                 
-                    local R = CommandStack[1,table]["NamesToAward",array][1,string]
+                    local R = CommandStack[1,table]["names_to_evaluate_for_award",array][1,string]
+                    CommandStack[1,table]["names_to_evaluate_for_award",array]:remove(1)
                     
-                    CommandStack[1,table]["SaveString",string] = CommandStack[1,table]["SaveString",string] + R+"\n"+Names[R,string]+"\n"+Scores[R,table]:toString()
+                    CommandStack[1,table]["SaveString",string] = CommandStack[1,table]["SaveString",string] + R+"\n"+Ingame_Name_Lookup[R,string]+"\n"+Scores[R,table]:toString()
                     
-                    if(Names[R,string] != "Total"){
-                    
-                        if(mask("HeavyHaulerScore",round(Scores[R,table]["dist",number]/(12*5280),1),CommandStack[1,table]["Awards",table])){CommandStack[1,table]["Awards",table]["HeavyHaulerName",string] = Names[R,string]}
-                        if(mask("GetDoneScore",Scores[R,table]["deliveries",number],CommandStack[1,table]["Awards",table])){CommandStack[1,table]["Awards",table]["GetDoneName",string] = Names[R,string]}
-                        if(mask("LocalServiceScore",Scores[R,table]["final",number]-Scores[R,table]["offmap",number],CommandStack[1,table]["Awards",table])){CommandStack[1,table]["Awards",table]["LocalServiceName",string] = Names[R,string]}
-                        if(mask("LinkChainScore",Scores[R,table]["offmap",number],CommandStack[1,table]["Awards",table])){CommandStack[1,table]["Awards",table]["LinkChainName",string] = Names[R,string]}
-                        if(mask("InteractsScore",Scores[R,table]["interacts",number],CommandStack[1,table]["Awards",table])){CommandStack[1,table]["Awards",table]["InteractsName",string] = Names[R,string]}
+                    if(Ingame_Name_Lookup[R,string] == ""){
+                        
+                        #this is to catch situations where the lookup table has been reset - it will display the steamID instead of the name
+                        Ingame_Name_Lookup[R,string] = R
                         
                     }
                     
-                    CommandStack[1,table]["NamesToAward",array]:remove(1)
+                    if(Ingame_Name_Lookup[R,string] == "Total" | Scores[R,table]["scoretype",string] != "player"){
+                        
+                        continue
+                        
+                    }
+                        
+                    local Keys = AwardData:keys()
+                
+                    for(X = 1,Keys:count()){
+                        
+                        local Award_Name = Keys[X,string]
+                        local This_Award = Awards[Award_Name,table]
+                        local Score_Key = AwardData[Award_Name,table]["scorekey",string]
+                        local This_Score = Scores[R,table][Score_Key,number]
+                        
+                        if(Score_Key == "dist" | Score_Key == "distup"){
+                            
+                            This_Score = round(This_Score/(12*5280),1)
+                            
+                        }elseif(Award_Name == "Local Service"){
+                            
+                            This_Score = This_Score - Scores[R,table]["offmap",number]
+                            
+                        }
+                        
+                        if(This_Award["score",number] < This_Score){
+                            
+                            This_Award["score",number] = This_Score
+                            This_Award["player",string] = Ingame_Name_Lookup[R,string]
+                            
+                        }elseif(This_Award["score",number] == This_Score){
+                            
+                            This_Award["player",string] = This_Award["player",string] + " & " + Ingame_Name_Lookup[R,string]
+                            
+                        }
+                            
+                    }
                      
                 }
                 
-                if(!CommandStack[1,table]["NamesToAward",array]:count() & minquota() > 5000){
+                if(!CommandStack[1,table]["names_to_evaluate_for_award",array]:count() & minquota() > 5000){
                     
                     findInSphere(entity():pos(),1024)
                     findClipToClass("gmod_wire_expression2")
@@ -516,7 +621,7 @@ if(first()){
                     if(CommandStack[1,table]["E2sToFind",array][1,entity]:getName():find("Operations")){
                     
                         OPSName = CommandStack[1,table]["E2sToFind",array][1,entity]:getName():sub(12)
-                        CommandStack[1,table]["E2sToFind",array] = array("1")
+                        CommandStack[1,table]["E2sToFind",array] = array()
                         break
                         
                     }
@@ -533,17 +638,27 @@ if(first()){
                     
                     local FileName = (Date["year",number]+"-"+Date["month",number]+"-"+Date["day",number]+"-"+Name+"-"+randint(100,999)):lower()
                     
-                    if(Autosave){FileName = (Date["year",number]+"-"+Date["month",number]+"-"+Date["day",number]+"-"+Name+"-autosave-"+SessionID):lower()}
+                    if(Is_Autosave){FileName = (Date["year",number]+"-"+Date["month",number]+"-"+Date["day",number]+"-"+Name+"-autosave-"+SessionID):lower()}
                     
-                    if(!Autosave){
+                    if(!Is_Autosave){
                         Print:pushString("Wrote File \"e2shared/opsdata-"+FileName+".txt\"\n"+owner():name()+" - "+Date["month",number]+"/"+Date["day",number]+"/"+Date["year",number]+" - "+mapname()+"\n\n"+Scores["Total",table]["spawned",number]+" cars created, "+Scores["Total",table]["trains",number]+" trains spawned.\n"+round(TimeElapsed/(60*60),2)+" hour session, "+round(Scores["Total",table]["miles",number])+" total car-miles")
-                    
-                        if(CommandStack[1,table]["Awards",table]["HeavyHaulerName",string] != ""){Print:pushString("\nHeavy Hauler: "+CommandStack[1,table]["Awards",table]["HeavyHaulerName",string]+" with "+CommandStack[1,table]["Awards",table]["HeavyHaulerScore",number]+" car-miles.")}
-                        if(CommandStack[1,table]["Awards",table]["GetDoneName",string] != ""){Print:pushString("\nGetting it Done: "+CommandStack[1,table]["Awards",table]["GetDoneName",string]+" moved "+CommandStack[1,table]["Awards",table]["GetDoneScore",number]+" cars to locations.")}
-                        if(CommandStack[1,table]["Awards",table]["LocalServiceName",string] != ""){Print:pushString("\nLocal Service: "+CommandStack[1,table]["Awards",table]["LocalServiceName",string]+" delivered "+CommandStack[1,table]["Awards",table]["LocalServiceScore",number]+" cars to customers.")}
-                        if(CommandStack[1,table]["Awards",table]["LinkChainName",string] != ""){Print:pushString("\nLink in the Chain: "+CommandStack[1,table]["Awards",table]["LinkChainName",string]+" delivered "+CommandStack[1,table]["Awards",table]["LinkChainScore",number]+" cars off-map.")}
-                        if(CommandStack[1,table]["Awards",table]["InteractsName",string] != ""){Print:pushString("\nSystem Keystone: "+CommandStack[1,table]["Awards",table]["InteractsName",string]+" handled "+CommandStack[1,table]["Awards",table]["InteractsScore",number]+" cars in transit.")}
                         
+                        local Keys = AwardData:keys()
+                    
+                        for(X = 1,Keys:count()){
+                            
+                            local Award_Name = Keys[X,string]
+                            local This_Award = Awards[Award_Name,table]
+                            local Award_Text = AwardData[Award_Name,table]
+                            
+                            if(This_Award["player",string] != "" & This_Award["score",number] != 0){
+                                
+                                Print:pushString("\n"+Award_Name+": "+This_Award["player",string]+Award_Text["s1",string]+This_Award["score",number]+Award_Text["s2",string])
+                                
+                            }
+                            
+                        }
+                                                
                     }
                     
                     timerResume("print")
@@ -589,20 +704,20 @@ if(first()){
     
     timer("checknames",10,0,function(){
     
-        local PL = players()
+        local PlayerList = players()
         
-        for(X = 1,PL:count()){
+        for(X = 1,PlayerList:count()){
         
-            P = PL[X,entity]:name()+":"
+            PlayerName = PlayerList[X,entity]:name()
             
-            if(P != ":"){Names[PL[X,entity]:steamID(),string] = P}
+            if(PlayerName != ""){Ingame_Name_Lookup[PlayerList[X,entity]:steamID(),string] = PlayerName}
             
         }
         
         
     })
     
-    timer("recheck",1500,0,function(){
+    timer("recheck",60,0,function(){
         if(Inc != Response){
             
             if(Signal["name",string] == "reroute"){
@@ -615,7 +730,7 @@ if(first()){
                     
                     local Player = ArrayOfPlayers[Y,string]
                     
-                    instantiate(Player,"player","incrementor")
+                    instantiate_in_score_table(Player,"player","incrementor")
                     
                     if(Signal["isoffmap",number]){
                         
@@ -636,7 +751,7 @@ if(first()){
                       
                 }
                 
-                instantiate(Signal["job",string],"job","incrementor")
+                instantiate_in_score_table(Signal["job",string],"job","incrementor")
                         
                 if(Signal["isoffmap",number]){
                     Scores[Signal["job",string],table]["offmap",number] = Scores[Signal["job",string],table]["offmap",number] + 1
@@ -662,13 +777,13 @@ if(first()){
                     
                     local Player = ArrayOfPlayers[Y,string]
                     
-                    instantiate(Player,"player","deletions")
+                    instantiate_in_score_table(Player,"player","deletions")
                     
                     Scores[Player,table]["deletions",number] = Scores[Player,table]["deletions",number] + 1
                     
                 }
                 
-                instantiate(Signal["job",string],"job","deletions")
+                instantiate_in_score_table(Signal["job",string],"job","deletions")
                 
                 Scores[Signal["job",string],table]["deletions",number] = Scores[Signal["job",string],table]["deletions",number] + 1
                 
@@ -748,6 +863,16 @@ if(first()){
         }
         
     })
+    
+    timer("update_total_hours",5,0,function(){
+        
+        if(Scores["Total",table]["first",number] != 0){
+        
+            TimeElapsed = systime() - Scores["Total",table]["first",number]
+            
+        }
+    
+    })
             
 }
 
@@ -802,12 +927,7 @@ event chat(Ply:entity, Said:string, Team:number){
     
 }
 
+#Scores = ScoresIn
 
-
-if(Scores["Total",table]["first",number] != 0){
-
-    TimeElapsed = systime() - Scores["Total",table]["first",number]
-    
-}
 
 

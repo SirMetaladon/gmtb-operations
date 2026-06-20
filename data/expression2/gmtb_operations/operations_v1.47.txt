@@ -46,6 +46,7 @@ if(first() | dupefinished()){
     InboundVariance = 0.33
     
     #Configuration file for the map
+    ##include "gmtb_operations/opsconfig/lober_jobs"
     #include "gmtb_operations/opsconfig/ssg_rsg_jobs"
 
     HologramsOn = 0 #Turns the holo bounding boxes on and off; 1 = on, 0 = off
@@ -446,10 +447,10 @@ if(first() | dupefinished()){
             
             while(1){
             
-                local R1 = random(1,27)
-                local R2 = random(1,27)
+                local R1 = randint(1,26)
+                local R2 = randint(1,26)
                 
-                ST = toChar(R1+63) + toChar(R2+63)
+                ST = toChar(R1+64) + toChar(R2+64)
                 
                 if(invert(BlockIndex)[ST,string] == ""){
                     

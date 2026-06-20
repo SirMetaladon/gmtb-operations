@@ -1,4 +1,4 @@
-@name opsconfig/janksetgulch
+@name gmtb_operations/opsconfig/janksetgulch
 @inputs 
 @outputs 
 @persist 
@@ -25,7 +25,7 @@ TrainPresets = table()
 TargetCarcount = 200
 
 Map = "gm_janksetgulch"
-ConfigName = "Jankset Gulch Std"
+ConfigName = "Jankset Gulch Std V0.5"
 ConfigLoaded = "v1.459"
 Era = "1970s 1980s"
 

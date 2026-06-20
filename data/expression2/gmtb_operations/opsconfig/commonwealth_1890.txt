@@ -1,4 +1,4 @@
-@name opsconfig/commonwealth_1890
+@name gmtb_operations/opsconfig/commonwealth_1890
 
 IndTurn = 20 #How many minutes it takes to change a car to unloaded once it reaches an industry
 
@@ -28,7 +28,7 @@ TrainPresets = table()
 TargetCarcount = 150
 
 Map = "gm_commonwealth_1890"
-ConfigName = "Commonwealth 1890 Std"
+ConfigName = "Commonwealth 1890 Std V1.0"
 ConfigLoaded = "v1.459"
 Era = "1920s 1930s"
 

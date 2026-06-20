@@ -89,9 +89,9 @@ function cyclecloner(T:table,R:array,S:string,T2:table){
     
 }
 
-if(Map != map()){
+if(Map != _MAP){
     
-    print("Wrong configuration for \""+map()+"\". This config is designed for "+Map)
+    print("Wrong configuration for \""+_MAP+"\". This config is designed for "+Map)
     print("Config name "+ConfigName+", version "+ConfigLoaded+", default carcount "+TargetCarcount)
     
 }

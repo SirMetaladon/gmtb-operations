@@ -1,4 +1,4 @@
-@name opsconfig/iron_siege
+@name gmtb_operations/opsconfig/ironsiege
 
 IndTurn = 30 #How many minutes it takes to change a car to unloaded once it reaches an industry
 
@@ -20,7 +20,7 @@ TrainPresets = table()
 TargetCarcount = 150
 
 Map = "gm_iron_siege"
-ConfigName = "Iron Siege WIP"
+ConfigName = "Ironsiege v0.5"
 ConfigLoaded = "v1.462"
 Era = "1850s 1860s 1870s"
 
