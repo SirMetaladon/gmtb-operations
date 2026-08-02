@@ -768,7 +768,7 @@ event chat(Ply:entity, Said:string, Team:number){
     
     if(Ply == owner()){
         
-        local LSC = Said:lower():trim() 
+        local LSC = Said:lower() 
         local LSCE = LSC:explode(" ")
         
         if(LSCE[1,string] == ".data"){
@@ -1068,6 +1068,77 @@ event chat(Ply:entity, Said:string, Team:number){
             if(!owner():aimEntity():isValidPhysics()){printM("Invalid entity!")}
             if(!Tracks[CurrentLoc,table]:count()){printM("Invalid location!")}  
     
+        }elseif(LSCE[1,string] == ".autowire"){
+            
+            hideChat(1)
+            findInSphere(entity():pos(),32000)
+            findClipToClass("gmod_wire_expression2")
+            local E2s = findToArray()
+            local Wirelink = table()
+            
+            for(X = 1,E2s:count()){
+                
+                if(E2s[X,entity]:getName():find("Operations")){
+                    
+                    Wirelink["ops",entity] = E2s[X,entity]
+                    
+                }elseif(E2s[X,entity]:getName():find("score_tracker")){
+                    
+                    Wirelink["tracker",entity] = E2s[X,entity]
+                    
+                }elseif(E2s[X,entity]:getName():find("score_viewer")){
+                    
+                    Wirelink["viewer",entity] = E2s[X,entity]
+                    
+                }
+                
+            }
+            
+            if(Wirelink["ops",entity] != _NO_ENTITY){
+                
+                entity():createWire(Wirelink["ops",entity],"Reload","MainEntityList")
+                entity():createWire(Wirelink["ops",entity],"IncRel","Inc")
+                
+            }
+            
+            if(Wirelink["tracker",entity] != _NO_ENTITY){
+                
+                entity():createWire(Wirelink["tracker",entity],"Response","Response")
+                Wirelink["tracker",entity]:createWire(entity(),"MainEntityList","MainEntityList")
+                Wirelink["tracker",entity]:createWire(entity(),"Inc","Inc")
+                Wirelink["tracker",entity]:createWire(entity(),"Signal","Signal")
+                
+            }
+            
+            if(Wirelink["viewer",entity] != _NO_ENTITY){
+                
+                Wirelink["viewer",entity]:createWire(entity(),"SegmentsActive","SegmentsActive")
+                Wirelink["viewer",entity]:createWire(entity(),"TargetCarcount","TargetCarcount")
+                
+            }
+            
+            
+        }elseif(LSCE[1,string] == ".killccc"){
+            
+            hideChat(1)
+            findInSphere(vec(0),3000000)
+            findClipToClass("gmod_wire_expression2")
+            
+            R = findToArray()
+            
+            for(X = 1,R:count()){
+                
+                L = R[X,entity]
+                
+                if(L:getName():find("awner") & L != entity() & L:owner() == owner()){
+                    
+                    print(L)
+                    L:propDelete()
+                    
+                }
+                
+            }
+            
         }
         
     }

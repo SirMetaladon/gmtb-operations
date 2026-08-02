@@ -506,6 +506,16 @@ if(first()){
                         if(Interaction){SpecificJobData["interacts",number] = SpecificJobData["interacts",number] + InteractsGiven}
                         SpecificJobData["dist",number] = SpecificJobData["dist",number] + DistFromLastPos
                         
+                        if(Vertical_Distance_Traveled > 0){
+                            
+                            SpecificJobData["distup",number] = SpecificJobData["distup",number] + Vertical_Distance_Traveled
+                            
+                        }else{
+                            
+                            SpecificJobData["distdown",number] = SpecificJobData["distdown",number] + Vertical_Distance_Traveled
+                            
+                        }
+                        
                         if(DistFromLastPos < 1){ #not moving
                             SpecificJobData["idlecount",number] = SpecificJobData["idlecount",number] + 1
                         }

@@ -1,5 +1,5 @@
 @name Operations v1.35
-@persist HID MainEntityList:table Era:string Tracks:table Stock:array Router:table ToSendOut:table LocsToMark:array WorldMarks:table Interchanges:array Adder:table CMD:table CarspawnerCommandStack:table TT Default:table Xt Ktr:array R2:table XALL WorldMarkEnts:array SortedTimers:array Job:table RouteKey:table Routes:table
+@persist HID MainEntityList:table Era:string Tracks:table Stock:array Router:table ToSendOut:table LocsToMark:array WorldMarks:table Interchanges:array Adder:table CMD:table Table:table TT Default:table Xt Ktr:array R2:table XALL WorldMarkEnts:array SortedTimers:array Job:table RouteKey:table Routes:table
 @outputs Current_Carcount CMD:table XALL JobsActive:table SortedTimers:array
 
 @inputs Rsp Reload:table IncRel
@@ -686,7 +686,7 @@ if(chatClk(owner())){ #Text parser
         
     }elseif(LSCE[1,string] == ".train"){
         
-        CarspawnerCommandStack = table()
+        Table = table()
         TT = 1
         
         local Count = LSCE[2,string]:toNumber()
@@ -707,7 +707,7 @@ if(chatClk(owner())){ #Text parser
                 
                 Adder = table()
             
-                CarspawnerCommandStack[(TT):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,10),Tl["spawnang",number])
+                Table[(TT):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,10),Tl["spawnang",number])
                 TT++
                 
                 CMD:pushTable(table("command" = "train-std-1","count" = Count,"loc" = Loc,"within" = ""))
@@ -937,16 +937,16 @@ if(clk("CMD")){
                 
                 Adder[X,array]:remove(4)
                 
-                CarspawnerCommandStack[(TT):toString(),array] = Adder[X,array]
+                Table[(TT):toString(),array] = Adder[X,array]
                 TT++
                 
             }
             
-            CarspawnerCommandStack[(TT):toString(),array] = array("summon",vec(0),0)
+            Table[(TT):toString(),array] = array("summon",vec(0),0)
             
             send(table("name" = "train","loc" = CMD[1,table]["loc",string]))
             
-            ToSendOut = CarspawnerCommandStack
+            ToSendOut = Table
         
             printM("spawned train length "+Adder:count()+" at "+CMD[1,table]["loc",string])
             
@@ -990,7 +990,7 @@ if(clk("CMD")){
             Ktr = Tracks:keys()
             
             #vars for test train spawn (see below)
-            CarspawnerCommandStack = table()
+            Table = table()
             TT = 1
             
             #essential variable
@@ -1050,8 +1050,8 @@ if(clk("CMD")){
                 
                 if(Type != ""){
                 
-                    CarspawnerCommandStack[(TT*2-1):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,20),Tl["spawnang",number])
-                    CarspawnerCommandStack[(TT*2):toString(),array] = array(".sp 0 "+Era+" "+swap(Type),vec(Count,0,0),Index)
+                    Table[(TT*2-1):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,20),Tl["spawnang",number])
+                    Table[(TT*2):toString(),array] = array(".sp 0 "+Era+" "+swap(Type),vec(Count,0,0),Index)
                     TT++
                     
                 }
@@ -1065,7 +1065,7 @@ if(clk("CMD")){
                 
                 CMD[1,table]["stage",string] = "finish" 
                 
-                #dsSend("populate","operations",CarspawnerCommandStack) #this line sends a command to spawn 1 car of the correct type at every location to verify it works
+                #dsSend("populate","operations",Table) #this line sends a command to spawn 1 car of the correct type at every location to verify it works
                 
             }
             
@@ -1167,14 +1167,14 @@ if(clk("CMD")){
                 
                 local Tl = Tracks[Ktr[XALL,string],table]
                 
-                CarspawnerCommandStack[(TT):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,20),Tl["spawnang",number])
+                Table[(TT):toString(),array] = array("summon",Tl["spawnpos",vector]+vec(0,0,20),Tl["spawnang",number])
                 TT++
                 
                 local Add = R2[Ktr[XALL,string],table]
                 
                 for(Y = 1,Add:count()){
                     
-                    CarspawnerCommandStack[(TT):toString(),array] = Add[Y,array]
+                    Table[(TT):toString(),array] = Add[Y,array]
                     TT++
                     
                 }
@@ -1185,9 +1185,9 @@ if(clk("CMD")){
             
             if(XALL > Ktr:count()){
                 
-                CarspawnerCommandStack[(TT):toString(),array] = array("summon",vec(0),0)
+                Table[(TT):toString(),array] = array("summon",vec(0),0)
                 
-                ToSendOut = CarspawnerCommandStack
+                ToSendOut = Table
                 
                 printM("spawned "+CMD[1,table]["count",number]+" cars at \"all industries\"")
                 
