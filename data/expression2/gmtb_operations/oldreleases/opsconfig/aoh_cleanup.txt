@@ -1,0 +1,57 @@
+@name opsconfig/aoh
+
+
+#parent, name, color, hitbox positive, hitbox negative, rotation hitbox, spawn location, spawn rotation, turnaround time (in minutes), array of routing
+
+Tracks["ash4",table] = table("ashland","",vec(255,191,0),vec(553,12330,-4296),vec(-4588,12130,-4498),0,vec(453,12230,-4398),90,IndTurn,array())
+Tracks["ash3",table] = table("ashland","",vec(255,191,0),vec(1321,12076,-4296),vec(-5364,11874,-4498),0,vec(1221,11974,-4398),90,IndTurn,array())
+Tracks["ash2",table] = table("ashland","",vec(255,191,0),vec(2087,11820,-4298),vec(-6149,11618,-4498),0,vec(1987,11718,-4398),90,IndTurn,array())
+Tracks["ash1",table] = table("ashland","",vec(255,191,0),vec(2727,11564,-4298),vec(-6781,11362,-4498),0,vec(2627,11462,-4398),90,IndTurn,array())
+
+Tracks["ashoil2",table] = table("ashland","Ashland\nOil Company",vec(255,191,0),vec(-785,13666,-4298),vec(-2979,13464,-4498),0,vec(-2879,13565,-4398),-90,IndTurn,array(2,"tank"))
+Tracks["ashoil1",table] = table("ashland","Ashland\nOil Company",vec(255,191,0),vec(1078,13922,-4298),vec(-2728,13720,-4498),0,vec(-2628,13820,-4398),-90,IndTurn,array(2,"tank"))
+Tracks["ashscrap",table] = table("ashland","Ashland\nScrapyard",vec(255,191,0),vec(7708,13922,-4297),vec(2607,13720,-4498),0,vec(7608,13822,-4398),90,IndTurn,array(3,"loaded scrap"))
+Tracks["ashcoal2",table] = table("ashland","Ashland\nCoal Tipple",vec(255,191,0),vec(5228,12603,-4297),vec(2623,12386,-4498),0,vec(5128,12486,-4398),90,IndTurn,array(4,"empty coal_hopper"))
+Tracks["ashcoal1",table] = table("ashland","Ashland\nCoal Tipple",vec(255,191,0),vec(5228,12844,-4298),vec(533,12642,-4498),0,vec(5128,12742,-4398),91,IndTurn,array(4,"empty coal_hopper"))
+
+Tracks["ashland",table] = table("all","Ashland Yard",vec(40,170,70),vec(7708,13922,-4298),vec(-6781,11362,-4498),0)
+
+Tracks["wingrain2",table] = table("winchester","Winchester\nGrain Terminal",vec(230,160,60),vec(1276,3886,-3146),vec(1057,1266,-3346),0,vec(1159,3786,-3246),-179,IndTurn,array(5,"grain_hopper"))
+Tracks["wingrain1",table] = table("winchester","Winchester\nGrain Terminal",vec(230,160,60),vec(1515,3885,-3146),vec(1314,151,-3346),0,vec(1414,3785,-3246),-180,IndTurn,array(5,"grain_hopper"))
+
+Tracks["winfuel",table] = table("","",vec(255,191,0),vec(-240,-3160,-3146),vec(-731,-6646,-3346),0,vec(-630,-3260,-3246),-179,IndTurn,array())
+Tracks["winstock",table] = table("","",vec(255,191,0),vec(-714,3884,-3146),vec(-1495,111,-3346),0,vec(-1394,3784,-3246),180,IndTurn,array())
+
+Tracks["olicoal1",table] = table("","",vec(255,191,0),vec(1388,13869,702),vec(-2463,13668,502),0,vec(1288,13768,602),90,IndTurn,array())
+Tracks["olicoal2",table] = table("","",vec(255,191,0),vec(1388,14125,711),vec(-3069,13655,502),0,vec(1288,14025,602),90,IndTurn,array())
+Tracks["oli5",table] = table("","",vec(255,191,0),vec(30,13613,707),vec(-3086,13343,502),0,vec(-2986,13513,602),-90,IndTurn,array())
+Tracks["oli4",table] = table("","",vec(255,191,0),vec(-150,13357,702),vec(-3865,13155,502),0,vec(-3765,13255,602),-90,IndTurn,array())
+Tracks["oli3",table] = table("","",vec(255,191,0),vec(593,13099,702),vec(-4622,12899,502),0,vec(-4522,12999,602),-90,IndTurn,array())
+Tracks["oli2",table] = table("","",vec(255,191,0),vec(1385,12845,702),vec(-5398,12643,502),0,vec(-5298,12744,602),-92,IndTurn,array())
+Tracks["oli1",table] = table("","",vec(255,191,0),vec(2050,12589,707),vec(-6168,12387,502),0,vec(-6068,12487,602),-90,IndTurn,array())
+
+Tracks["peakgrain",table] = table("","",vec(255,191,0),vec(-10601,-1752,2614),vec(-10801,-4881,2414),0,vec(-10701,-1852,2514),180,IndTurn,array())
+
+Tracks["peak1",table] = table("","",vec(255,191,0),vec(-11337,-5407,2614),vec(-12051,-10873,2414),0,vec(-11517,-10298,2514),-18,IndTurn,array())
+Tracks["peak2",table] = table("","",vec(255,191,0),vec(-11337,-5407,2614),vec(-12051,-10873,2414),0,vec(-11695,-10123,2514),0,IndTurn,array())
+Tracks["peak3",table] = table("","",vec(255,191,0),vec(-11337,-5407,2614),vec(-12051,-10873,2414),0,vec(-11950,-10773,2514),2,IndTurn,array())
+
+Tracks["peakcoal",table] = table("","",vec(255,191,0),vec(-11500,1881,2615),vec(-11999,-1520,2414),0,vec(-11600,-1420,2514),0,IndTurn,array())
+Tracks["peakoff1",table] = table("","",vec(255,191,0),vec(-12012,1709,2614),vec(-12213,-1896,2414),0,vec(-12112,-1796,2514),0,IndTurn,array())
+Tracks["peakoff2",table] = table("","",vec(255,191,0),vec(-12267,2363,2614),vec(-12469,-1764,2414),0,vec(-12369,-1664,2514),1,IndTurn,array())
+
+
+Tracks["cin7",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-4151,11721,7627),-90,IndTurn,array())
+Tracks["cin6",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-4915,11977,7628),-90,IndTurn,array())
+Tracks["cin5",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-5686,12233,7627),-90,IndTurn,array())
+Tracks["cin4",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-6460,12489,7627),-90,IndTurn,array())
+Tracks["cin3",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-7220,12743,7627),-90,IndTurn,array())
+Tracks["cin2",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-7998,12999,7628),-90,IndTurn,array())
+Tracks["cin1",table] = table("cincinnati","Cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0,vec(-8644,13255,7627),-90,IndTurn,array())
+
+
+
+Tracks["cincinnati",table] = table("all","cincinnati Yard",vec(230, 59, 89),vec(10555,13400,7731),vec(-8744,11619,7527),0)
+
+
+Tracks["all",table] = table("","",vec(255),vec(16000),vec(-16000))

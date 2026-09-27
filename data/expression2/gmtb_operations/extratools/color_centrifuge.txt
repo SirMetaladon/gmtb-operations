@@ -1,10 +1,11 @@
-@name gmtb_operations/color_centrifuge
-@persist Colors:table Increment Keys:array E:entity Scale Phase:string HID Overall Print:array
+@name gmtb_operations/extratools/color_centrifuge
+@persist Colors:table Increment Keys:array E:entity Scale Phase:string HID Overall Print:array Counter:number
 @outputs Colors:table
 
 
 if(first()){
     
+    Counter=  0
     HID = 1000
     
     function line(P1:vector,P2:vector,V:vector){
@@ -36,11 +37,39 @@ if(first()){
     Colors["avoid9",vector] = vec(255,255,255)*0.25
     
     
-    Colors["hialeah",vector] = vec(26, 239, 17)
-    Colors["bowden",vector] = vec(40, 180, 254)
-    Colors["tower",vector] = vec(40, 180, 254)
-    Colors["dade",vector] = vec(40, 180, 254)
-    
+
+Colors["1alb1",vector] = vec(30,183,134)
+Colors["alb2",vector] = vec(191,30,157)
+Colors["atl12",vector] = vec(30,175,255)
+Colors["auto",vector] = vec(81,142,30)
+
+Colors["hager",vector] = vec(112,159,255)
+
+Colors["coal",vector] = vec(32,30,186)
+Colors["7downtown",vector] = vec(255,181,30)
+Colors["goldstone",vector] = vec(255,255,87)
+Colors["grain",vector] = vec(110,255,30)
+
+
+Colors["infra1",vector] = vec(146,255,185)
+Colors["infra23",vector] = vec(86,255,140)
+Colors["6infra4",vector] = vec(255,30,98)
+
+Colors["logs",vector] = vec(177,166,125)
+Colors["lumberlogs",vector] = vec(168,138,188)
+Colors["mm12",vector] = vec(180,255,255)
+Colors["newburg",vector] = vec(111,119,127)
+Colors["8njrc1",vector] = vec(176,128,255)
+Colors["njrc2",vector] = vec(255,175,255)
+Colors["njrc3",vector] = vec(30,255,95)
+Colors["njrc4",vector] = vec(255,109,133)
+Colors["oil",vector] = vec(30,30,30)
+Colors["ore12",vector] = vec(202,143,31)
+Colors["reef",vector] = vec(30,30,114)
+Colors["sea12",vector] = vec(255,255,213)
+Colors["3sea3",vector] = vec(245,255,141)
+Colors["steel",vector] = vec(255,166,162)
+Colors["5tch3",vector] = vec(30,133,186)
     
 
     
@@ -77,6 +106,8 @@ if(Phase == "two"){
     
     while(Increment <= Keys:count() & holoCanCreate() & minquota() > 1000){
         
+        Counter++
+        
         Vector = Colors[Keys[Increment,string],vector]
         local MoveBy = vec()
         
@@ -93,14 +124,18 @@ if(Phase == "two"){
                 print(Keys[Y,string]+" "+Keys[Increment,string])
                 
             }
+            
+        
                 
-                if(Diff:length() < 90){
-                    DVal = 3
+                if(Diff:length() < 150){
+                    DVal = (100^2.5)/((clamp(Diff:length(),10,150))^2.5)
                 }else{
                     DVal = 0
                 }
                 
-                MoveBy = MoveBy + (Diff:normalized()+randvec(-0.1,0.1))*DVal#clamp((100/(clamp(Diff:length(),0.01,450))),5,10)
+                
+                
+                MoveBy = MoveBy + (Diff:normalized()+randvec(-1,1))*DVal #clamp((100/(clamp(Diff:length(),0.01,450))),5,10)
             
             }
             
@@ -157,7 +192,7 @@ if(Phase == "print"){
         
         if(!Print[Index,string]:find("avoid")){
         
-            printColor(array(Colors[Print[Index,string],vector],"Colors[\""+Print[Index,string]+"\",vector] = vec"+round(Colors[Print[Index,string],vector]):toString():replace("[","("):replace("]",")")))
+            printColor(array(Colors[Print[Index,string],vector],"Colors[\""+Print[Index,string]+"\",vector] = "+round(Colors[Print[Index,string],vector]):toString():replace("[","("):replace("]",")")))
             
         }
         

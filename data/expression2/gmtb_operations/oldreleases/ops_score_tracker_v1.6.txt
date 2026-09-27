@@ -1,8 +1,8 @@
-@name gmtb_operations/ops_score_tracker_v1.58
+@name gmtb_operations/ops_score_tracker_v1.6
 @inputs MainEntityList:table# ScoresIn:table
 
-@persist [CarData Scores CurrentlyInteracting CurrInteractUNSAFE LastPlayerToInteract Ingame_Name_Lookup CommandStack EntSeenThisScan ExcludedEntities Awards AwardData]:table [SaveFile MainListKeys Print ToFreeze]:array ScanInterval HID IdleFreezeInterval PreviousScanTime ScanIncrement FreezingOn SessionID
-@outputs Scores:table Ingame_Name_Lookup:table TimeElapsed CommandStack:table CurrentlyInteracting:table LastPlayerToInteract:table ScanIncrement FreezingOn
+@persist [CarData Scores CurrentlyInteracting CurrInteractUNSAFE LastPlayerToInteract Ingame_Name_Lookup CommandStack EntSeenThisScan ExcludedEntities Awards AwardData]:table [SaveFile MainListKeys Print ToFriction]:array ScanInterval HID FrictionInterval PreviousScanTime ScanIncrement SessionID
+@outputs Scores:table Ingame_Name_Lookup:table TimeElapsed CommandStack:table CurrentlyInteracting:table LastPlayerToInteract:table ScanIncrement
 
 @inputs Inc Signal:table
 @persist Response
@@ -14,6 +14,7 @@ if(dupefinished()){reset()}
 
 if(first()){
     
+    #v1.6  - replaced autofreeze with friction
     #v1.58 - added tracking of vertical distance to jobs
     #v1.57 - minor refactoring of score system to fix some bugs and make code cleaner
     #v1.56 - added server name to data files, changed some names around
@@ -30,8 +31,7 @@ if(first()){
     #v1.3  - started keeping track of versions 3-9-24
     
     ScanInterval = 3 #time in seconds that the E2 will shoot for; it isn't exact as some times there will be delays
-    IdleFreezeInterval = 5 * 60
-    FreezingOn = 1 #on by default, use .autofreeze to toggle
+    FrictionInterval = 5 * 60
     
     Scores = table()
     Ingame_Name_Lookup = table()
@@ -57,7 +57,7 @@ if(first()){
     Print = array()
     MainListKeys = array()
     SaveFile = array()
-    ToFreeze = array()
+    ToFriction = array()
     Awards = table()
     AwardData = table()
     AwardData["Big Hauler",table] = table("scorekey" = "dist","s1" = " with ","s2" = " car-miles.")
@@ -686,27 +686,32 @@ if(first()){
             
         }
     
-        while(ToFreeze:count() & safe()){
+        while(ToFriction:count() & safe()){
             
-            local FrameID = ToFreeze[1,string]
+            local FrameID = ToFriction[1,string]
         
             local LastInteract = CarData[FrameID,table]["last interacted time",number]
-                            
-            if((LastInteract + IdleFreezeInterval) < LocalTime){
+            local Ents = MainEntityList[FrameID,table]["ents",array]
             
-                local Ents = MainEntityList[FrameID,table]["ents",array]
-                
-                if(Ents[1,entity]:vel():length() < 10){ #if the car is moving slower than about 0.6 mph
+            if(Ents[1,entity]:vel():length() < 10){ #if the car is moving slower than about 0.6 mph
+                            
+                if((LastInteract + FrictionInterval) < LocalTime){
         
                     for(Z = 1, Ents:count()){
-                        entity(Ents[Z,number]):propFreeze(1)
+                        entity(Ents[Z,number]):propPhysicalMaterial("metal")
+                    }
+                    
+                }elseif(entity(Ents[1,number]):propPhysicalMaterial() == "metal"){
+                    
+                    for(Z = 1, Ents:count()){
+                        entity(Ents[Z,number]):propPhysicalMaterial("friction_00")
                     }
                     
                 }
                 
             }
             
-            ToFreeze:remove(1)
+            ToFriction:remove(1)
             
         }
         
@@ -831,7 +836,7 @@ if(first()){
             
     })
     
-    timer("freeze",10,0,function(){if(FreezingOn){ToFreeze = MainEntityList:keys()}})
+    timer("freeze",10,0,function(){ToFriction = MainEntityList:keys()})
         
     timer("autosave",5*60,0,function(){
         
@@ -903,16 +908,7 @@ event chat(Ply:entity, Said:string, Team:number){
             
             hideChat(1)
             printTable(CarData[owner():aimEntity():id():toString(),table])
-            
-        }elseif(Said == ".autofreeze"){
-            
-            hideChat(1)
-            timerRestart("freeze")
-            
-            FreezingOn = !FreezingOn
-            
-            print("Autofreeze status is currently "+FreezingOn+". Use the command again to toggle.")
-            
+                        
         }elseif(LSC[1,string] == ".score"){
             
             hideChat(1)

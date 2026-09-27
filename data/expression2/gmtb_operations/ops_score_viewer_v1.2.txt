@@ -1,5 +1,5 @@
-@name gmtb_operations/ops_score_viewer
-@inputs EGP:wirelink EGP2:wirelink Scores:table Names:table TimeElapsed SegmentsActive:table TargetCarcount
+@name gmtb_operations/ops_score_viewer_v1.2
+@inputs EGP:wirelink EGP2:wirelink Scores:table Ingame_Name_Lookup:table TimeElapsed SegmentsActive:table TargetCarcount Segments:table
 @persist Sortal:string SortDirection Segments:table ConfigName:string
 @trigger none
 
@@ -8,42 +8,11 @@ if(dupefinished()){reset()}
 
 if(first()){
     
-    #v1.1 - instantiated versions, added top line detailing target, current overall score totals
+    #v1.2 - piped over data from operations chip instead of having it locally - ease of maintenance
+    #v1.1 - instantiated versions, added top line detailing target, current overall score totals1
     
     Sortal = "interacts"
     SortDirection = 1 
-    
-    findInSphere(entity():pos(),1024)
-    findClipToClass("gmod_wire_expression2")
-    local E2s = findToArray()
-    
-    for(X = 1,E2s:count()){
-        
-        if(E2s[X,entity]:getName():find("OPS Score Tracker")){
-            
-            local Wirelink = E2s[X,entity]
-            
-            entity():createWire(Wirelink,"Scores","Scores")
-            entity():createWire(Wirelink,"Names","Names")
-            entity():createWire(Wirelink,"TimeElapsed","TimeElapsed")
-            
-        }elseif(E2s[X,entity]:getName():find("Operations")){
-            
-            local Wirelink = E2s[X,entity]
-            
-            entity():createWire(Wirelink,"SegmentsActive","SegmentsActive")
-            entity():createWire(Wirelink,"TargetCarcount","TargetCarcount")
-            
-        }
-        
-    }
-    
-    
-    
-    ##include "gmtb_operations/opsconfig/lober_jobs"
-    #include "gmtb_operations/opsconfig/ssg_rsg_jobs"
-    ##include "gmtb_operations/opsconfig/ssg2_standard"
-    ##include "gmtb_operations/opsconfig/miamisub_standard"
     
     timer("egp1",2000)
     timer("egp2",6000)
@@ -104,7 +73,7 @@ if(clk("egp1")){
         
         S = K2[X-1,string]
         
-        EGP:egpText(X,Names[S,string]:sub(0,15),vec2(0,(X-1)*14))
+        EGP:egpText(X,Ingame_Name_Lookup[S,string]:sub(0,15),vec2(0,(X-1)*14))
         EGP:egpText(X+KT,round(Scores[S,table]["dist",number]/(12*5280),1)+" CM",vec2(130,(X-1)*14))
         EGP:egpText(X+(KT*2),Scores[S,table]["deliveries",number]+" MV",vec2(220,(X-1)*14))
         EGP:egpText(X+(KT*3),Scores[S,table]["interacts",number]+" INT",vec2(285,(X-1)*14))

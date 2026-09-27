@@ -26,6 +26,7 @@ TargetCarcount = 150
 Map = "gm_wrefingley"
 ConfigName = "Wrefingley Std v1.0"
 ConfigLoaded = "v1.47"
+
 function table zoneblock(N:number,A:array){
     
     local XP = -500000
@@ -105,6 +106,7 @@ Colors["644",vector] = vec(116,154,77)
 Colors["777",vector] = vec(139,74,68)
 Colors["804",vector] = vec(165,38,255)
 Colors["805",vector] = vec(86,102,255)
+Colors["alb1",vector] = vec(97,143,90)
 
 Colors["auto",vector] = vec(39,165,30)
 Colors["chicago",vector] = vec(162,245,255)
@@ -1094,7 +1096,7 @@ WorldMarks:pushArray(array("njrc1",vec(-12768,16010,-2),270))
 WorldMarks:pushArray(array("mm1",vec(4153,-15153,-434),81))
 #WorldMarks:pushArray(array("rockbottom",vec(12333,13227,-659),0))
 
-Tracks["alb1",table]["color",vector] = vec(97,143,90)
+Tracks["alb1",table]["color",vector] = Colors["alb1",vector]
 Tracks["alb2",table]["color",vector] = vec(120,30,108)
 Tracks["atl1",table]["color",vector] = vec(30,162,255)
 Tracks["atl2",table]["color",vector] = vec(30,162,255)
@@ -1138,12 +1140,12 @@ Tracks["tch3",table]["color",vector] = Segments["644",table]["color",vector]
 
 Tracks["804out",table]["color",vector] = Segments["804",table]["color",vector]
 
-TrainPresets["antlion",table] = table("name" = "The Antlion","desc" = "Spawns a SB consist in Hagerstown, a NB consist in Staging, and refinery/MMM industries.","color" = Segments["805",table]["color",vector],
+TrainPresets["antlion",table] = table("name" = "The Antlion","desc" = "Spawns a SB consist in Hagerstown, a NB consist in Staging, and refinery/MMM industries.","color" = Colors["805",vector],
 "data" = table(table("share" = 0.2,"spawns" = array("open","hager"),"depth" = 5,"jobs" = array("805")),table("share" = 0.5,"spawns" = array("mm1","mm2","njrc1","njrc2","njrc3","njrc4"),"depth" = 0,"jobs" = array("all")),
 table("share" = 0.3,"spawns" = array("804track"),"depth" = 5,"jobs" = array("all"))),"length" = 18)
-TrainPresets["805",table] = table("name" = "Job 805","desc" = "Spawns a SB consist in Hagerstown for Job 805.","color" = Segments["805",table]["color",vector],
+TrainPresets["805",table] = table("name" = "Job 805","desc" = "Spawns a SB consist in Hagerstown for Job 805.","color" = Colors["805",vector],
 "data" = table(table("share" = 1,"spawns" = array("open","hager"),"depth" = 5,"jobs" = array("805"))),"length" = 9)
-TrainPresets["804",table] = table("name" = "Job 804","desc" = "Spawns a NB consist in Staging for Job 804.","color" = Segments["8044",table]["color",vector],
+TrainPresets["804",table] = table("name" = "Job 804","desc" = "Spawns a NB consist in Staging for Job 804.","color" = Colors["804",vector],
 "data" = table(table("share" = 1,"spawns" = array("804track"),"depth" = 5,"jobs" = array("all"))),"length" = 9)
 
 
