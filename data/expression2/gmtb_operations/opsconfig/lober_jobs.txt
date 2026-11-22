@@ -11,6 +11,7 @@ TrainPresets = table()
 
 TargetCarcount = 150
 
+#v1.5  - adjusted some block limits, fixed wiremod bugs, added markers to the offmap portals
 #v0.62 - trimmed some annoying industries, added lading info, attempted and failed to fix reverse-direction cars in 201/224
 #v0.61 - fixed one train being the wrong way, made staging tracks length work
 #v0.6  - more run-through trains, rejigged colors, merged Stahlburg with other work, changed a lot of color behavior
@@ -24,7 +25,7 @@ TargetCarcount = 150
 #V0.40 - setting up new lading system - compatible with OPS 1.44
 
 Map = "gm_wrefingley"
-ConfigName = "Wrefingley Std v1.0"
+ConfigName = "Wrefingley Std v1.5"
 ConfigLoaded = "v1.47"
 
 function table zoneblock(N:number,A:array){
@@ -88,6 +89,9 @@ if(Map != _MAP){
     print("Config name "+ConfigName+", version "+ConfigLoaded+", default carcount "+TargetCarcount)
     
 }
+
+IndTurn = IndTurn
+Trains = Trains
 
 Colors = table()
 
@@ -325,6 +329,28 @@ Tracks["joe8",table] = table(
 
 TX3 = zoneblock(0,array("bmz2","bmz3","bmz4","bmz5","bmz6","bmz7","joe1","joe2","joe3","joe4","joe5","joe6","joe7","joe8"))
 Tracks["downtown",table] = table("name" = "Downtown Industrial Zone","boxhi" = TX3[1,vector],"boxlo" = TX3[2,vector])
+#[
+Tracks["downsiding",table] = table(
+    "part of" = "downtown","name" = "Downtown Industrial Zone",
+    "boxhi" = vec(7185,1757,380),"boxlo" = vec(6814,1221,169),
+    "spawnpos" = vec(6914,1657,280),"spawnang" = -155
+
+)
+
+Tracks["downmain",table] = table(
+    "part of" = "downtown","name" = "Downtown Industrial Zone",
+    "boxhi" = vec(6626,2020,383),"boxlo" = vec(6298,1563,183),
+    "spawnpos" = vec(6398,1920,283),"spawnang" = -155
+)
+
+Tracks["downoff",table] = table(
+    "part of" = "downtown","name" = "Downtown Industrial Zone",
+    "boxhi" = vec(7670,1139,382),"boxlo" = vec(7362,722,179),
+    "spawnpos" = vec(7462,1039,282),"spawnang" = -155
+)]#
+
+
+
 
 
 Tracks["infra1",table] = table(
@@ -977,24 +1003,28 @@ Segments["3671",table] = table(
 
 Segments["399",table] = table(
     "color" = Colors["399",vector],
-    "min" = 4,"max" = 10,
+    "min" = 4,"max" = 7,
     "job" = "Job 399",
     "name" = "Hagerstown Transfer Southbound",
     "routing" = table(array("scythe"),array("hager")))
 
 Segments["398",table] = table(
     "color" = Colors["398",vector],
-    "min" = 4,
+    "min" = 4,"max" = 7,
     "job" = "Job 398",
     "name" = "Scythe Transfer Northbound",
     "routing" = table(array("hager"),array("scythe")))
 
-Segments["581",table] = table(
+Segments["581a",table] = table(
     "color" = Colors["581",vector],
-    "min" = 4,"showfinal" = 1,
+    "min" = 4,"showfinal" = 1,"max" = 8,
     "job" = "Job 581",
     "name" = "\"Downtown Job Transfer Southbound\"",
-    "routing" = table(array("scythe","hager"),array("downtown")))
+    "routing" = table(array("scythe"),array("downtown")))
+Segments["581b",table] = Segments["581a",table]:merge(table(
+    "min" = 0,"max" = 0,
+    "name" = "\"Downtown Job Transfer Pickup Southbound\"",
+    "routing" = table(array("hager"),array("downtown"))))
 Segments["777",table] = table(
     "color" = Colors["777",vector],
     "job" = "Job 777",
@@ -1012,15 +1042,18 @@ Segments["582",table] = table(
 Segments["501",table] = table(
     "color" = Colors["501",vector],
     "job" = "Job 501","nomove" = 1,
+    "min" = 6,
     "name" = "\"Combine Local\" Northbound Local",
     "routing" = table(array("scythe"),array("tropicana"),array("atl1","atl2"),array("alb1","alb2")))
 Segments["501b",table] = Segments["501",table]:merge(table(
-    "routing" = table(array("tropicana"),array("sea1","sea2","sea3"))))
+    "routing" = table(array("tropicana"),array("sea1","sea2","sea3")),
+    "min" = 0))
     
 Segments["501c",table] = Segments["501",table]:merge(table(
     "name" = "\"Combine Local\" Southbound Returns",
-    "color" = Colors["scythe",vector],
-    "routing" = table(array("sea1","sea2","sea3","atl1","atl2","alb1","alb2"),array("scythe"))))
+    "color" = Colors["scythe",vector],"min" = 0,
+    "routing" = table(array("sea1","sea2","sea3","atl1","atl2","alb1","alb2"),array("scythe")),
+    "min" = 0))
 
 Segments["644",table] = table(
     "job" = "Job 644","color" = Colors["644",vector],
@@ -1044,13 +1077,6 @@ Segments["804",table] = table(
     "job" =  "Job 804","nomove" = 1,
     "name" = "\"The Antlion\" Northbound Returns",
     "routing" = table(array("804track"),array("mm1","mm2"),array("njrc1"),array("scythe")))
-
-#[
-Segments["999",table] = table(
-    "color" = Colors["999",vector],
-    "job" =  "Job 999","nomove" = 1,
-    "name" = "Scythe Local Work",
-    "routing" = table(array("scythe"),array("scythe")))]#
     
 Segments["444",table] = table(
     "color" = Colors["hager",vector],
@@ -1095,6 +1121,16 @@ WorldMarks:pushArray(array("njrc3",vec(-8642,11652,-103),184))
 WorldMarks:pushArray(array("njrc1",vec(-12768,16010,-2),270))
 WorldMarks:pushArray(array("mm1",vec(4153,-15153,-434),81))
 #WorldMarks:pushArray(array("rockbottom",vec(12333,13227,-659),0))
+
+WorldMarks:pushArray(array("chicago",vec(553,-16302,3109),90))
+WorldMarks:pushArray(array("autoout",vec(553,-16302,3109+50),90))
+WorldMarks:pushArray(array("coalout",vec(553,-16302,3109+100),90))
+WorldMarks:pushArray(array("grainout",vec(553,-16302,3109+150),90))
+
+WorldMarks:pushArray(array("goldstone",vec(12333,13520-150,-704),0))
+WorldMarks:pushArray(array("oilout",vec(12333,13520-150,-704+50),0))
+WorldMarks:pushArray(array("reefout",vec(12333,13520-150,-704+100),0))
+WorldMarks:pushArray(array("steelout",vec(12333,13520-150,-704+150),0))
 
 Tracks["alb1",table]["color",vector] = Colors["alb1",vector]
 Tracks["alb2",table]["color",vector] = vec(120,30,108)
@@ -1163,7 +1199,7 @@ TrainPresets["398",table] = table("name" = "Scythe Transfer","desc" = "Spawns a 
 TrainPresets["399",table] = table("name" = "Hagerstown Transfer","desc" = "Spawns a transfer from Scythe to Hagerstown.","color" = Segments["399",table]["color",vector],
 "data" = table(table("share" = 1,"spawns" = array("open","scy1","scy2","scy3"),"depth" = 1,"jobs" = array("399"))),"length" = 11)
 
-TrainPresets["581",table] = table("name" = "Downtown Transfer","desc" = "Spawns a transfer from Scythe to the Downtown.","color" = Segments["581",table]["color",vector],
+TrainPresets["581",table] = table("name" = "Downtown Transfer","desc" = "Spawns a transfer from Scythe to the Downtown.","color" = Colors["581",vector],
 "data" = table(table("share" = 1,"spawns" = array("open","scy1","scy2","scy3"),"depth" = 1,"jobs" = array("581"))),"length" = 11)
 TrainPresets["777",table] = table("name" = "Downtown Returns","desc" = "Spawns cars in the Downtown to return to Scythe.","color" = Segments["777",table]["color",vector],
 "data" = table(table("share" = 1,"spawns" = array("downtown"),"depth" = 1,"jobs" = array("all"))),"length" = 11)

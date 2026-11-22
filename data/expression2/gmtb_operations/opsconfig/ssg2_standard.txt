@@ -1,8 +1,10 @@
-@name gmtb_operations/opsconfig/ssg2_standard
-@persist ConfigLoaded:string
+@name gmtb_operations/opsconfig/hotload/ssg2_std
+@persist IndTurn:number [Tracks WorldMarks Segments Trains TrainPresets Colors LadingDescriptions]:table [Map ConfigName ConfigLoaded Era]:string
+@outputs IndTurn:number [Tracks WorldMarks Segments Trains TrainPresets Colors LadingDescriptions]:table [Map ConfigName ConfigLoaded Era]:string
 
 IndTurn = 100 #How many minutes it takes to change a car to unloaded once it reaches an industry
 
+#v1.5  - hotloader edition, fixed Kahuna tracks, plastic pellet hoppers
 #v1.12 - added more train presets
 #v1.1  - added train B-6 which means cars aren't hitchhiking on Train 72 to get to Rockfort, fixed Zone 4 colors, through trains have more thru cars
 #v1.0  - started adding custom trains, coal loop train, zone 0 removal, Deephall trains now spawn in PSC Yard, reworked the entire road trai network, RRR Logs is now serviced independently of Zone 6
@@ -307,7 +309,7 @@ Tracks["sandref1",table] = table("locgroup" = "zone1",
 "name" = "Sandstone Refinery","color" = Colors["unassigned",vector],
 "boxhi" = vec(13253,4712,8335),"boxlo" = vec(13051,-3507,8134),
 "spawnpos" = vec(13152,4612,8235),"spawnang" = -180,"route exclusion" = "gulch",
-"work" = array(4,"general_tanker","oil","diesel",3,"general_tanker","oil","gasoline",2,"chemical_tanker","empty","moltensulfur",3,"lpg_tanker","empty","lpg",3,"grain_hopper","empty","plasticpellets"))
+"work" = array(4,"general_tanker","oil","diesel",3,"general_tanker","oil","gasoline",2,"chemical_tanker","empty","moltensulfur",3,"lpg_tanker","empty","lpg",3,"plasticpellet","empty","plasticpellets"))
 
 Tracks["sandref2",table] = Tracks["sandref1",table]:merge(table(
 "boxhi" = vec(12101,4976,8335),"boxlo" = vec(11899,-1174,8134),
@@ -357,7 +359,7 @@ Tracks["maxwell",table] = table("locgroup" = "zone2",
 "name" = "Thunder's Bane Maxwell Automation","color" = Colors["unassigned",vector],
 "boxhi" = vec(-7803,7365,6555),"boxlo" = vec(-8005,-213,6354),
 "spawnpos" = vec(-7904,7265,6454),"spawnang" = 180,
-"work" = array(2,"general_boxcar","aluminum","machinery",1,"chemical_tanker","chemicals","empty",2,"general_flatcar","empty","oversizemachinery",1,"grain_hopper","plasticpellets","empty",2,"coilcar","steelcoils","empty"))
+"work" = array(2,"general_boxcar","aluminum","machinery",1,"chemical_tanker","chemicals","empty",2,"general_flatcar","empty","oversizemachinery",1,"plasticpellet","plasticpellets","empty",2,"coilcar","steelcoils","empty"))
 
 Tracks["paper",table] = table("locgroup" = "zone2",
 "name" = "Thunder's Bane Paper Mill","color" = Colors["unassigned",vector],
@@ -414,11 +416,13 @@ Tracks["kahatl1",table] = table("locgroup" = "zone3",
 "name" = "Kahuna Atlantic Warehouse","color" = Colors["unassigned",vector],
 "boxhi" = vec(-3874,-3995,4079),"boxlo" = vec(-10147,-4197,3878),
 "spawnpos" = vec(-10047,-4095,3978),"spawnang" = -90,
-"work" = array(2,"general_boxcar","dryfoods","packaging",2,"general_boxcar","foods","empty",2,"general_boxcar","goods","packaging",2,"general_boxcar","produce","empty"))
+"work" = array(1,"general_boxcar","dryfoods","packaging",1,"general_boxcar","foods","empty",1,"general_boxcar","goods","packaging",1,"general_boxcar","produce","empty"))
 
 Tracks["kahatl2",table] = Tracks["kahatl1",table]:merge(table(
 "boxhi" = vec(-3881,-4379,4079),"boxlo" = vec(-10154,-4581,3878),
-"spawnpos" = vec(-10054,-4480,3978),"spawnang" = -89,"work" = array()))
+"spawnpos" = vec(-10054,-4480,3978),"spawnang" = -89))
+zoneblock(1,array("kahatl1","kahatl2"))
+
 
 
 Tracks["kahwater",table] = table("locgroup" = "zone3",
