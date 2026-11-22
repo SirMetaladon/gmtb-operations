@@ -1,0 +1,37 @@
+@name gmtb_operations/extratools/worldmarker
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+
+
+runOnChat(1)
+    
+EX = lastSaid():explode(" ")
+
+if(chatClk(owner()) & EX[1,string] == ".w"){
+    
+    S = EX[2,string]
+    
+    P = owner():aimPos()
+    N = owner():aimNormal()
+    
+    P = round(P + N*2)
+    
+    A = round(N:toAngle():yaw())
+    
+    holoCreate(1,P,vec(1),N:toAngle(),vec(0,255,191),"cube")
+    
+    
+    S = "WorldMarks:pushArray(array(\""+S+"\","
+    
+    S2 = (""+P+","+A+"))"):replace("]",""):replace("[","")
+    
+    print(S+S2)
+    
+    hideChat(1)
+    
+}
+
+#pscslaggrind pscslagdump psccokeoven psciron pscblastlime pscblast1 pscblastcoke pscbofscrap pscbofio
